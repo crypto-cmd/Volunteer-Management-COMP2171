@@ -30,3 +30,37 @@ export const useToasts = () => {
     }, []);
     return state;
 };
+
+export const ToastContainer = () => {
+    const toasts = useToasts();
+
+    return (
+        <div style={{
+            position: "fixed",
+            top: "20px",
+            right: "20px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
+            zIndex: 9999
+        }}>
+            {toasts.map((toast) => (
+                <div
+                    key={toast.id}
+                    style={{
+                        padding: "12px 16px",
+                        borderRadius: "8px",
+                        color: "white",
+                        background:
+                            toast.type === "success" ? "#22c55e" :
+                            toast.type === "error" ? "#ef4444" :
+                            "#3b82f6",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.2)"
+                    }}
+                >
+                    {toast.message}
+                </div>
+            ))}
+        </div>
+    );
+};

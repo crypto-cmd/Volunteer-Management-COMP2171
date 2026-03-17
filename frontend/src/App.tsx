@@ -1,6 +1,7 @@
 import "./index.css";
 import React, { useState } from 'react';
 import VolunteerTimesheet from "./VolunteerTimesheet";
+import { ToastContainer } from "./Toast";
 
 // --- HOME COMPONENT ---
 function Home({ navigateTo }) {
@@ -72,9 +73,8 @@ export default function App() {
         {currentView === 'timesheet' && <VolunteerTimesheet navigateTo={setCurrentView} />}
 
         {/* Toast Notifications */}
-        <div>
-
-        </div>
+        <ToastContainer />
+        
       </main>
     </div>
   );
