@@ -70,6 +70,11 @@ export default function App() {
       <main className="py-6">
         {currentView === 'home' && <Home navigateTo={setCurrentView} />}
         {currentView === 'timesheet' && <VolunteerTimesheet navigateTo={setCurrentView} />}
+
+        {/* Toast Notifications */}
+        <div>
+
+        </div>
       </main>
     </div>
   );
