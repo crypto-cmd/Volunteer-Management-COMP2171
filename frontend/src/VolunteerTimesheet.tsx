@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { VolunteerApiService, type Volunteer, type TimesheetRecord } from './services/VolunteerApiService';
+import { addToast } from './Toast';
 
 const apiService = new VolunteerApiService();
 
@@ -23,6 +24,7 @@ export default function VolunteerTimesheet({ navigateTo }: { navigateTo?: (view:
     const [editingId, setEditingId] = useState(null);
     const [editHours, setEditHours] = useState('');
 
+
     // Fetch records for the selected volunteer
     const fetchRecords = useCallback(async (volunteerId: string) => {
         try {
@@ -31,11 +33,13 @@ export default function VolunteerTimesheet({ navigateTo }: { navigateTo?: (view:
             setVolunteerName(data.volunteer.name);
         } catch (e) {
             console.error("Failed to fetch records:", e);
+            addToast({ message: "Failed to fetch records.", type: "error" });
         }
     }, []);
 
     // Fetch records on mount and when selected volunteer changes
     useEffect(() => {
+
         const id = role === 'Admin' ? selectedVolunteer : 'V001';
         fetchRecords(id);
     }, [selectedVolunteer, role, fetchRecords]);
@@ -84,8 +88,10 @@ export default function VolunteerTimesheet({ navigateTo }: { navigateTo?: (view:
         try {
             const updated = await apiService.updateRecord(selectedVolunteer, id, Number(editHours));
             setRecords(records.map(rec => rec.id === id ? updated : rec));
+            addToast({ message: 'Record updated successfully.', type: 'success' });
         } catch (e) {
             console.error("Failed to save:", e);
+            addToast({ message: 'Failed to save changes.', type: 'error' });
         }
         setEditingId(null);
     };

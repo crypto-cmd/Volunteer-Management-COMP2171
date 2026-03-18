@@ -74,7 +74,6 @@ export default function App() {
 
         {/* Toast Notifications */}
         <ToastContainer />
-        
       </main>
     </div>
   );
