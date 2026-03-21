@@ -1,6 +1,6 @@
 import { join } from "path";
-import { VolunteerRepository } from "./repository";
-import { VolunteerService } from "./service";
+import { VolunteerRepository } from "./repositories";
+import { VolunteerService } from "./services";
 
 const DATA_PATH = join(import.meta.dir, "../data/volunteers.json");
 const repo = new VolunteerRepository(DATA_PATH);

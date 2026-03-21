@@ -2,3 +2,6 @@
 [serve.static]
 plugins = ["bun-plugin-tailwind"]
 env = "BUN_PUBLIC_*"
+
+[env]
+BUN_PUBLIC_BACKEND_PORT = "8080"

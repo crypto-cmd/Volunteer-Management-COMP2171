@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
-import { Volunteer, TimesheetRecord } from "./models";
+import { Volunteer, TimesheetRecord } from "@models";
 
 interface RawData {
     volunteers: { id: string; name: string }[];

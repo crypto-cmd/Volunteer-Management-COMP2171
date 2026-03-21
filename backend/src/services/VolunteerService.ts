@@ -1,5 +1,5 @@
-import { VolunteerRepository } from "./repository";
-import { Volunteer, TimesheetRecord } from "./models";
+import { VolunteerRepository } from "@repositories";
+import { Volunteer, TimesheetRecord } from "@models";
 
 export class VolunteerService {
     private readonly repo: VolunteerRepository;
