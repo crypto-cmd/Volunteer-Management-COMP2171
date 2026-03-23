@@ -13,7 +13,7 @@ const server = serve({
     // Echo console logs from the browser to the server
     console: true,
   },
-  port: process.env.FRONTEND_PORT || 3000,
+  port: Number(process.env.PORT) || 3000
 });
 
 console.log(`🚀 Server running at ${server.url}`);
