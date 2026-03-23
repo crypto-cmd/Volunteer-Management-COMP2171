@@ -18,10 +18,13 @@ const volunteerService = new VolunteerService(volunteerRepo);
 const eventRepo = new EventRepository(EVENTS_DATA_PATH);
 const eventService = new ManageEventsService(eventRepo);
 
+const allowedOrigin = process.env.FRONTEND_PATH || "http://localhost:3000";
+
 const corsHeaders = {
-  "Access-Control-Allow-Origin": `http://localhost:${process.env.FRONTEND_PORT || 3000}`,
+  "Access-Control-Allow-Origin": allowedOrigin,
   "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
+  Vary: "Origin",
 };
 
 function json(body: unknown, status = 200) {

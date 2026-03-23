@@ -16,7 +16,8 @@ export interface VolunteerRecordsResponse {
     records: TimesheetRecord[];
 }
 
-const API_BASE = `http://localhost:${process.env.BUN_PUBLIC_BACKEND_PORT || 3001}`;
+const env = ((import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {});
+const API_BASE = env.BUN_PUBLIC_BACKEND_URL || `http://localhost:${env.BUN_PUBLIC_BACKEND_PORT || 3001}`;
 
 export class VolunteerApiService {
     private readonly baseUrl: string;
