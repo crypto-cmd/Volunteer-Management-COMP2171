@@ -1,5 +1,5 @@
 import { VolunteerRepository } from "@repositories";
-import { Volunteer, TimesheetRecord } from "@models";
+import { type EventRequestStatus, Volunteer, TimesheetRecord } from "@models";
 
 export class VolunteerService {
     private readonly repo: VolunteerRepository;
@@ -23,5 +23,17 @@ export class VolunteerService {
 
     updateRecord(volunteerId: string, recordId: number, hoursWorked: number): TimesheetRecord | null {
         return this.repo.updateRecord(volunteerId, recordId, hoursWorked);
+    }
+
+    getEventRequests(filters?: { eventId?: string; volunteerId?: string; status?: EventRequestStatus }) {
+        return this.repo.getEventRequests(filters);
+    }
+
+    createEventRequest(volunteerId: string, eventId: string) {
+        return this.repo.createEventRequest(volunteerId, eventId);
+    }
+
+    updateEventRequestStatus(requestId: number, status: EventRequestStatus) {
+        return this.repo.updateEventRequestStatus(requestId, status);
     }
 }
