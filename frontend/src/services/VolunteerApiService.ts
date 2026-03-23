@@ -6,6 +6,7 @@ export interface Volunteer {
 export interface TimesheetRecord {
     id: number;
     date: string;
+    eventId: string;
     eventName: string;
     hoursWorked: number;
 }

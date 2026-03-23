@@ -1,10 +1,11 @@
 import "./index.css";
-import React, { useState } from 'react';
+import { useState } from 'react';
 import VolunteerTimesheet from "./pages/VolunteerTimesheet";
-import Home from "./pages/Home";
+import Home from "@pages/Home";
 import { ToastContainer } from "./components/Toast";
+import Events from "@pages/Events";
 
-// --- MAIN APP ENTRY POINT ---
+
 export default function App() {
   const [currentView, setCurrentView] = useState('home');
 
@@ -29,6 +30,7 @@ export default function App() {
       <main className="py-6">
         {currentView === 'home' && <Home navigateTo={setCurrentView} />}
         {currentView === 'timesheet' && <VolunteerTimesheet navigateTo={setCurrentView} />}
+        {currentView === 'events' && <Events navigateTo={setCurrentView} />}
 
         {/* Toast Notifications */}
         <ToastContainer />

@@ -1,12 +1,16 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import DataTable, { type DataTableColumn, type DataTableRow } from '@components/DataTable';
+import PageTopBar from '@components/PageTopBar';
 import { VolunteerApiService, type Volunteer, type TimesheetRecord } from '@services/VolunteerApiService';
 import { addToast } from '@components/Toast';
+import VolunteerDropdownCard from '@components/VolunteerDropdownCard';
 
 const apiService = new VolunteerApiService();
 
 export default function VolunteerTimesheet({ navigateTo }: { navigateTo?: (view: string) => void }) {
     const [role, setRole] = useState('Volunteer'); // 'Volunteer' | 'Admin'
     const [selectedVolunteer, setSelectedVolunteer] = useState('V001');
+    const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
     const [volunteerSearch, setVolunteerSearch] = useState('');
     const [searchResults, setSearchResults] = useState<Volunteer[]>([]);
     const [records, setRecords] = useState<TimesheetRecord[]>([]);
@@ -39,9 +43,19 @@ export default function VolunteerTimesheet({ navigateTo }: { navigateTo?: (view:
 
     // Fetch records on mount and when selected volunteer changes
     useEffect(() => {
-        const id = role === 'Admin' ? selectedVolunteer : 'V001';
-        fetchRecords(id);
+        fetchRecords(selectedVolunteer);
     }, [selectedVolunteer, role, fetchRecords]);
+
+    useEffect(() => {
+        apiService.searchVolunteers('')
+            .then((all) => {
+                setVolunteers(all);
+                if (all.length > 0 && !all.some(v => v.id === selectedVolunteer)) {
+                    setSelectedVolunteer(all[0].id);
+                }
+            })
+            .catch(e => console.error(e));
+    }, []);
 
     // Fuzzy search volunteers from backend
     useEffect(() => {
@@ -95,36 +109,97 @@ export default function VolunteerTimesheet({ navigateTo }: { navigateTo?: (view:
         setEditingId(null);
     };
 
+    const tableColumns: DataTableColumn[] = [
+        {
+            key: 'date',
+            header: (
+                <button className="w-full text-left" onClick={() => requestSort('date')}>
+                    Date {sortConfig.key === 'date' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </button>
+            ),
+            headerClassName: 'p-3 cursor-pointer hover:bg-gray-200',
+        },
+        {
+            key: 'eventName',
+            header: (
+                <button className="w-full text-left" onClick={() => requestSort('eventName')}>
+                    Activity / Event {sortConfig.key === 'eventName' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </button>
+            ),
+            headerClassName: 'p-3 cursor-pointer hover:bg-gray-200',
+        },
+        {
+            key: 'hoursWorked',
+            header: (
+                <button className="w-full text-left" onClick={() => requestSort('hoursWorked')}>
+                    Hours Worked {sortConfig.key === 'hoursWorked' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                </button>
+            ),
+            headerClassName: 'p-3 cursor-pointer hover:bg-gray-200',
+        },
+    ];
+
+    if (role === 'Admin') {
+        tableColumns.push({ key: 'actions', header: 'Actions', headerClassName: 'p-3' });
+    }
+
+    const tableRows: DataTableRow[] = processedRecords.map((record) => {
+        const cells: React.ReactNode[] = [
+            record.date,
+            record.eventName,
+            editingId === record.id ? (
+                <input
+                    type="number"
+                    className="w-20 p-1 border rounded"
+                    value={editHours}
+                    onChange={(e) => setEditHours(e.target.value)}
+                />
+            ) : (
+                record.hoursWorked
+            ),
+        ];
+
+        if (role === 'Admin') {
+            cells.push(
+                editingId === record.id ? (
+                    <button onClick={() => handleSaveClick(record.id)} className="text-green-600 hover:text-green-800 font-medium mr-3">Save</button>
+                ) : (
+                    <button onClick={() => handleEditClick(record)} className="text-blue-600 hover:text-blue-800 font-medium">Edit</button>
+                )
+            );
+        }
+
+        return {
+            key: record.id,
+            cells,
+        };
+    });
+
     return (
         <div className="p-6 max-w-5xl mx-auto font-sans">
-            {/* Navigation Bar */}
-            <div className="flex justify-between items-center mb-8 border-b pb-4">
-                {navigateTo && (
-                    <button
-                        onClick={() => navigateTo('home')}
-                        className="flex items-center text-blue-600 hover:text-blue-800 font-medium"
-                    >
-                        <span className="mr-2">←</span> Back to Dashboard
-                    </button>
-                )}
-
-                {/* Role Toggle Switch */}
-                <div className="flex items-center space-x-3 bg-gray-100 p-2 rounded-lg ml-auto">
-                    <span className={`font-medium ${role === 'Volunteer' ? 'text-blue-600' : 'text-gray-500'}`}>Volunteer</span>
-                    <button
-                        onClick={() => setRole(role === 'Volunteer' ? 'Admin' : 'Volunteer')}
-                        className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-600 transition-colors"
-                    >
-                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${role === 'Admin' ? 'translate-x-6' : 'translate-x-1'}`} />
-                    </button>
-                    <span className={`font-medium ${role === 'Admin' ? 'text-blue-600' : 'text-gray-500'}`}>Admin</span>
-                </div>
-            </div>
+            <PageTopBar
+                role={role}
+                onToggleRole={() => setRole(role === 'Volunteer' ? 'Admin' : 'Volunteer')}
+                navigateTo={navigateTo}
+            />
 
             <div className="mb-6">
                 <h1 className="text-2xl font-bold text-gray-800">Volunteer Timesheet</h1>
                 <p className="text-gray-600">Track and manage community service hours.</p>
             </div>
+
+            {role === 'Volunteer' && (
+                <VolunteerDropdownCard
+                    label="View As Volunteer"
+                    volunteers={volunteers}
+                    selectedVolunteerId={selectedVolunteer}
+                    onSelectVolunteer={(id) => {
+                        setSelectedVolunteer(id);
+                        setEditingId(null);
+                    }}
+                    viewingName={volunteerName}
+                />
+            )}
 
             {/* Admin: Volunteer Search */}
             {role === 'Admin' && (
@@ -192,69 +267,21 @@ export default function VolunteerTimesheet({ navigateTo }: { navigateTo?: (view:
                 </div>
             </div>
 
-            {/* Data Table  */}
-            <div className="overflow-x-auto border rounded-lg shadow-sm">
-                <table className="w-full text-left border-collapse">
-                    <thead className="bg-gray-100 border-b">
-                        <tr>
-                            <th className="p-3 cursor-pointer hover:bg-gray-200" onClick={() => requestSort('date')}>
-                                Date {sortConfig.key === 'date' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                            </th>
-                            <th className="p-3 cursor-pointer hover:bg-gray-200" onClick={() => requestSort('eventName')}>
-                                Activity / Event {sortConfig.key === 'eventName' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                            </th>
-                            <th className="p-3 cursor-pointer hover:bg-gray-200" onClick={() => requestSort('hoursWorked')}>
-                                Hours Worked {sortConfig.key === 'hoursWorked' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                            </th>
-                            {role === 'Admin' && <th className="p-3">Actions</th>}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {processedRecords.length > 0 ? processedRecords.map((record) => (
-                            <tr key={record.id} className="border-b hover:bg-gray-50">
-                                <td className="p-3">{record.date}</td>
-                                <td className="p-3">{record.eventName}</td>
-                                <td className="p-3">
-                                    {editingId === record.id ? (
-                                        <input
-                                            type="number"
-                                            className="w-20 p-1 border rounded"
-                                            value={editHours}
-                                            onChange={(e) => setEditHours(e.target.value)}
-                                        />
-                                    ) : (
-                                        record.hoursWorked
-                                    )}
-                                </td>
-                                {/* Admin Actions  */}
-                                {role === 'Admin' && (
-                                    <td className="p-3">
-                                        {editingId === record.id ? (
-                                            <button onClick={() => handleSaveClick(record.id)} className="text-green-600 hover:text-green-800 font-medium mr-3">Save</button>
-                                        ) : (
-                                            <button onClick={() => handleEditClick(record)} className="text-blue-600 hover:text-blue-800 font-medium">Edit</button>
-                                        )}
-                                    </td>
-                                )}
-                            </tr>
-                        )) : (
-                            <tr>
-                                <td colSpan={role === 'Admin' ? 4 : 3} className="p-6 text-center text-gray-500">
-                                    No records found.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                    <tfoot className="bg-gray-50 border-t font-semibold">
-                        <tr>
-                            <td colSpan={2} className="p-3 text-right">Total Hours:</td>
-                            <td colSpan={role === 'Admin' ? 2 : 1} className="p-3">
-                                {processedRecords.reduce((sum, record) => sum + Number(record.hoursWorked), 0)}
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
+            <DataTable
+                columns={tableColumns}
+                rows={tableRows}
+                emptyMessage="No records found."
+                emptyColSpan={role === 'Admin' ? 4 : 3}
+                maxVisibleRows={10}
+                footer={(
+                    <tr>
+                        <td colSpan={2} className="p-3 text-right">Total Hours:</td>
+                        <td colSpan={role === 'Admin' ? 2 : 1} className="p-3">
+                            {processedRecords.reduce((sum, record) => sum + Number(record.hoursWorked), 0)}
+                        </td>
+                    </tr>
+                )}
+            />
         </div>
     );
 }

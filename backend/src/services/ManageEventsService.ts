@@ -1,53 +1,61 @@
 import { Event } from "../models/Event";
-import { EventRepository } from "../repositories/EventRepository";
+import { EventRepository } from "../repositories/EventRepository.ts";
 
 export class ManageEventsService {
 
   constructor(
     private eventRepository: EventRepository
-  ) {}
+  ) { }
 
-  async createEvent(
+  createEvent(
     id: string,
-    title: string,
+    name: string,
     description: string,
-    date: Date,
-    location: string
-  ): Promise<void> {
+    date: string,
+    time: string,
+    location: string,
+    capacity: number,
+    category: string,
+    status: string,
+  ): void {
 
     const event = new Event(
       id,
-      title,
+      name,
       description,
       date,
-      location
+      time,
+      location,
+      capacity,
+      category,
+      status,
     );
 
-    await this.eventRepository.create(event);
+    this.eventRepository.create(event);
 
   }
 
-  async updateEvent(event: Event): Promise<void> {
+  updateEvent(event: Event): void {
 
-    await this.eventRepository.update(event);
-
-  }
-
-  async deleteEvent(eventId: string): Promise<void> {
-
-    await this.eventRepository.delete(eventId);
+    this.eventRepository.update(event);
 
   }
 
-  async getEvent(eventId: string): Promise<Event | null> {
+  deleteEvent(eventId: string): void {
 
-    return await this.eventRepository.findById(eventId);
+    this.eventRepository.delete(eventId);
 
   }
 
-  async getAllEvents(): Promise<Event[]> {
+  getEvent(eventId: string): Event | null {
 
-    return await this.eventRepository.findAll();
+    return this.eventRepository.findById(eventId);
+
+  }
+
+  getAllEvents(): Event[] {
+
+    return this.eventRepository.findAll();
 
   }
 
