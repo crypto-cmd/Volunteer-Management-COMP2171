@@ -10,6 +10,7 @@
     "typescript": "^5"
   },
   "scripts": {
-    "dev": "bun --hot src/index.ts"
+    "dev": "bun --hot src/index.ts",
+    "build:vercel": "bun run scripts/build-vercel.ts"
   }
 }
