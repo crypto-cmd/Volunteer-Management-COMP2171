@@ -1,46 +1,31 @@
-import { readFileSync, writeFileSync } from "fs";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { Event } from "@models";
 
-interface RawEvent {
-    id: string;
-    name: string;
-    description: string;
-    date: string;
-    time: string;
-    location: string;
-    capacity: number;
-    category: string;
-    status: string;
-}
-
-interface EventsData {
-    events: RawEvent[];
-}
-
 export class EventRepository {
-    private readonly eventsPath: string;
+    private supabase: SupabaseClient;
 
-    constructor(eventsPath: string) {
-        this.eventsPath = eventsPath;
+    // Inject the Supabase client instead of a file path
+    constructor(supabaseClient: SupabaseClient) {
+        this.supabase = supabaseClient;
     }
 
-    private loadRaw(): EventsData {
-        return JSON.parse(readFileSync(this.eventsPath, "utf-8"));
-    }
+    async findAll(): Promise<Event[]> {
+        const { data, error } = await this.supabase
+            .from('events')
+            .select('*');
 
-    private save(data: EventsData): void {
-        writeFileSync(this.eventsPath, JSON.stringify(data, null, 2));
-    }
+        if (error) {
+            throw new Error(`Failed to fetch events: ${error.message}`);
+        }
 
-    findAll(): Event[] {
-        const raw = this.loadRaw();
-        return raw.events.map((e) =>
+        // Map Supabase rows (event_date) to your Event model (date)
+        return data.map((e) =>
             new Event(
                 e.id,
                 e.name,
                 e.description,
-                e.date,
-                e.time,
+                e.event_date, 
+                e.event_time, 
                 e.location,
                 e.capacity,
                 e.category,
@@ -49,56 +34,87 @@ export class EventRepository {
         );
     }
 
-    findById(eventId: string): Event | null {
-        const raw = this.loadRaw();
-        const found = raw.events.find((e) => e.id === eventId);
-        if (!found) return null;
+    async findById(eventId: string): Promise<Event | null> {
+        const { data, error } = await this.supabase
+            .from('events')
+            .select('*')
+            .eq('id', eventId)
+            .single(); // .single() returns one object instead of an array
+
+        if (error) {
+            // Supabase returns PGRST116 if no rows are found with .single()
+            if (error.code === 'PGRST116') return null;
+            throw new Error(`Failed to fetch event: ${error.message}`);
+        }
 
         return new Event(
-            found.id,
-            found.name,
-            found.description,
-            found.date,
-            found.time,
-            found.location,
-            found.capacity,
-            found.category,
-            found.status,
+            data.id,
+            data.name,
+            data.description,
+            data.event_date,
+            data.event_time,
+            data.location,
+            data.capacity,
+            data.category,
+            data.status,
         );
     }
 
-    create(event: Event): void {
-        const raw = this.loadRaw();
+    async create(event: Event): Promise<void> {
+        const eventData = event.toJSON();
 
-        if (raw.events.some((e) => e.id === event.id)) {
-            throw new Error("Event already exists");
+        const { error } = await this.supabase
+            .from('events')
+            .insert({
+                id: eventData.id,
+                name: eventData.name,
+                description: eventData.description,
+                event_date: eventData.date, // Mapping model to DB schema
+                event_time: eventData.time, // Mapping model to DB schema
+                location: eventData.location,
+                capacity: eventData.capacity,
+                category: eventData.category,
+                status: eventData.status
+            });
+
+        if (error) {
+            if (error.code === '23505') { // Postgres unique violation code
+                throw new Error("Event already exists");
+            }
+            throw new Error(`Failed to create event: ${error.message}`);
         }
-
-        raw.events.push(event.toJSON());
-        this.save(raw);
     }
 
-    update(event: Event): void {
-        const raw = this.loadRaw();
+    async update(event: Event): Promise<void> {
+        const eventData = event.toJSON();
 
-        const idx = raw.events.findIndex((e) => e.id === event.id);
-        if (idx < 0) {
-            throw new Error("Event not found");
+        const { error, count } = await this.supabase
+            .from('events')
+            .update({
+                name: eventData.name,
+                description: eventData.description,
+                event_date: eventData.date,
+                event_time: eventData.time,
+                location: eventData.location,
+                capacity: eventData.capacity,
+                category: eventData.category,
+                status: eventData.status
+            })
+            .eq('id', eventData.id);
+
+        if (error) {
+            throw new Error(`Failed to update event: ${error.message}`);
         }
-
-        raw.events[idx] = event.toJSON();
-        this.save(raw);
     }
 
-    delete(eventId: string): void {
-        const raw = this.loadRaw();
+    async delete(eventId: string): Promise<void> {
+        const { error } = await this.supabase
+            .from('events')
+            .delete()
+            .eq('id', eventId);
 
-        const idx = raw.events.findIndex((e) => e.id === eventId);
-        if (idx < 0) {
-            throw new Error("Event not found");
+        if (error) {
+            throw new Error(`Failed to delete event: ${error.message}`);
         }
-
-        raw.events.splice(idx, 1);
-        this.save(raw);
     }
 }

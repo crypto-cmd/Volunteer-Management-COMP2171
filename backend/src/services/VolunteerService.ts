@@ -8,32 +8,32 @@ export class VolunteerService {
         this.repo = repo;
     }
 
-    searchVolunteers(query: string): Volunteer[] {
-        const all = this.repo.findAllVolunteers();
+    async searchVolunteers(query: string): Promise<Volunteer[]> {
+        const all = await this.repo.findAllVolunteers();
         const lowerQuery = query.toLowerCase();
         return lowerQuery ? all.filter(v => v.matchesFuzzy(lowerQuery)) : all;
     }
 
-    getVolunteerRecords(volunteerId: string): { volunteer: Volunteer; records: TimesheetRecord[] } | null {
-        const volunteer = this.repo.findVolunteerById(volunteerId);
+    async getVolunteerRecords(volunteerId: string): Promise<{ volunteer: Volunteer; records: TimesheetRecord[] } | null> {
+        const volunteer = await this.repo.findVolunteerById(volunteerId);
         if (!volunteer) return null;
-        const records = this.repo.getRecordsForVolunteer(volunteerId);
+        const records = await this.repo.getRecordsForVolunteer(volunteerId);
         return { volunteer, records };
     }
 
-    updateRecord(volunteerId: string, recordId: number, hoursWorked: number): TimesheetRecord | null {
+    async updateRecord(volunteerId: string, recordId: number, hoursWorked: number): Promise<TimesheetRecord | null> {
         return this.repo.updateRecord(volunteerId, recordId, hoursWorked);
     }
 
-    getEventRequests(filters?: { eventId?: string; volunteerId?: string; status?: EventRequestStatus }) {
+    async getEventRequests(filters?: { eventId?: string; volunteerId?: string; status?: EventRequestStatus }) {
         return this.repo.getEventRequests(filters);
     }
 
-    createEventRequest(volunteerId: string, eventId: string) {
+    async createEventRequest(volunteerId: string, eventId: string) {
         return this.repo.createEventRequest(volunteerId, eventId);
     }
 
-    updateEventRequestStatus(requestId: number, status: EventRequestStatus) {
+    async updateEventRequestStatus(requestId: number, status: EventRequestStatus) {
         return this.repo.updateEventRequestStatus(requestId, status);
     }
 }

@@ -47,13 +47,13 @@ export class ManageEventsService {
 
   }
 
-  getEvent(eventId: string): Event | null {
+  getEvent(eventId: string) {
 
     return this.eventRepository.findById(eventId);
 
   }
 
-  getAllEvents(): Event[] {
+  getAllEvents() {
 
     return this.eventRepository.findAll();
 

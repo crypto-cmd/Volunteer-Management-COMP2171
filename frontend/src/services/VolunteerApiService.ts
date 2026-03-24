@@ -1,3 +1,5 @@
+import { API_BASE } from "./api";
+
 export interface Volunteer {
     id: string;
     name: string;
@@ -16,13 +18,11 @@ export interface VolunteerRecordsResponse {
     records: TimesheetRecord[];
 }
 
-const API_BASE = `http://localhost:${process.env.BUN_PUBLIC_BACKEND_PORT || 3001}`;
-
 export class VolunteerApiService {
     private readonly baseUrl: string;
 
-    constructor(baseUrl: string = API_BASE) {
-        this.baseUrl = baseUrl;
+    constructor() {
+        this.baseUrl = API_BASE;
     }
 
     async searchVolunteers(query: string, signal?: AbortSignal): Promise<Volunteer[]> {

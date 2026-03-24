@@ -1,3 +1,5 @@
+import { API_BASE } from "./api";
+
 export interface EventRecord {
     id: string;
     name: string;
@@ -24,13 +26,12 @@ export interface EventRequestRecord {
     volunteerName?: string;
 }
 
-const API_BASE = `http://localhost:${process.env.BUN_PUBLIC_BACKEND_PORT || 3001}`;
 
 export class EventApiService {
     private readonly baseUrl: string;
 
-    constructor(baseUrl: string = API_BASE) {
-        this.baseUrl = baseUrl;
+    constructor() {
+        this.baseUrl = API_BASE;
     }
 
     async getEvents(): Promise<EventRecord[]> {

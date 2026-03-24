@@ -3,23 +3,27 @@ import { type EventRequestStatus, Event } from "@models";
 import { EventRepository, VolunteerRepository } from "./repositories";
 import { ManageEventsService, VolunteerService } from "./services";
 
-const VOLUNTEERS_DATA_PATH = join(import.meta.dir, "../data/volunteers.json");
-const TIMESHEETS_DATA_PATH = join(import.meta.dir, "../data/timesheets.json");
-const EVENTS_DATA_PATH = join(import.meta.dir, "../data/events.json");
-const REQUESTS_DATA_PATH = join(import.meta.dir, "../data/requests.json");
+import { createClient } from '@supabase/supabase-js';
 
-const volunteerRepo = new VolunteerRepository(
-  VOLUNTEERS_DATA_PATH,
-  TIMESHEETS_DATA_PATH,
-  EVENTS_DATA_PATH,
-  REQUESTS_DATA_PATH,
-);
+// 1. Grab environment variables
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error("Error: SUPABASE_URL and SUPABASE_KEY must be set in the .env file.");
+  process.exit(1);
+}
+
+// 2. Initialize the Supabase client
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+const volunteerRepo = new VolunteerRepository(supabase);
 const volunteerService = new VolunteerService(volunteerRepo);
-const eventRepo = new EventRepository(EVENTS_DATA_PATH);
+const eventRepo = new EventRepository(supabase);
 const eventService = new ManageEventsService(eventRepo);
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": `http://localhost:${process.env.FRONTEND_PORT || 3000}`,
+  "Access-Control-Allow-Origin": `*`,
   "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
@@ -37,7 +41,7 @@ const server = Bun.serve({
       async GET(req) {
         const url = new URL(req.url);
         const query = url.searchParams.get("q") || "";
-        const results = volunteerService.searchVolunteers(query);
+        const results = await volunteerService.searchVolunteers(query);
         return json(results);
       },
     },
@@ -45,7 +49,7 @@ const server = Bun.serve({
     "/api/volunteers/:id/records": {
       async GET(req) {
         const { id } = req.params;
-        const result = volunteerService.getVolunteerRecords(id);
+        const result = await volunteerService.getVolunteerRecords(id);
         if (!result) return json({ error: "Volunteer not found" }, 404);
         return json(result);
       },
@@ -61,7 +65,7 @@ const server = Bun.serve({
         }
 
         try {
-          const record = volunteerService.updateRecord(id, Number(recordId), body.hoursWorked);
+          const record = await volunteerService.updateRecord(id, Number(recordId), body.hoursWorked);
           if (!record) return json({ error: "Record not found" }, 404);
           return json(record);
         } catch (e: any) {
@@ -72,7 +76,7 @@ const server = Bun.serve({
 
     "/api/events": {
       async GET() {
-        return json(eventService.getAllEvents());
+        return json(await eventService.getAllEvents());
       },
       async POST(req) {
         const body = await req.json() as {
@@ -106,7 +110,7 @@ const server = Bun.serve({
             body.category,
             body.status,
           );
-          const created = eventService.getEvent(body.id);
+          const created = await eventService.getEvent(body.id);
           return json(created, 201);
         } catch (e: any) {
           return json({ error: e.message }, 400);
@@ -116,7 +120,7 @@ const server = Bun.serve({
 
     "/api/events/:id": {
       async GET(req) {
-        const event = eventService.getEvent(req.params.id);
+        const event = await eventService.getEvent(req.params.id);
         if (!event) return json({ error: "Event not found" }, 404);
         return json(event);
       },
@@ -133,7 +137,7 @@ const server = Bun.serve({
           status?: string;
         };
 
-        const existing = eventService.getEvent(id);
+        const existing = await eventService.getEvent(id);
         if (!existing) return json({ error: "Event not found" }, 404);
 
         const updated = new Event(
@@ -149,7 +153,7 @@ const server = Bun.serve({
         );
 
         try {
-          eventService.updateEvent(updated);
+          await eventService.updateEvent(updated);
           return json(updated);
         } catch (e: any) {
           return json({ error: e.message }, 400);
@@ -157,7 +161,7 @@ const server = Bun.serve({
       },
       async DELETE(req) {
         try {
-          eventService.deleteEvent(req.params.id);
+          await eventService.deleteEvent(req.params.id);
           return json({ success: true });
         } catch (e: any) {
           return json({ error: e.message }, 400);
@@ -175,7 +179,7 @@ const server = Bun.serve({
         }
 
         try {
-          const created = volunteerService.createEventRequest(body.volunteerId, eventId);
+          const created = await volunteerService.createEventRequest(body.volunteerId, eventId);
           return json(created, 201);
         } catch (e: any) {
           return json({ error: e.message }, 400);
@@ -194,7 +198,7 @@ const server = Bun.serve({
           return json({ error: "Invalid status" }, 400);
         }
 
-        return json(volunteerService.getEventRequests({
+        return json(await volunteerService.getEventRequests({
           eventId,
           volunteerId,
           status: status || undefined,
@@ -212,7 +216,7 @@ const server = Bun.serve({
         }
 
         try {
-          const updated = volunteerService.updateEventRequestStatus(Number(requestId), body.status);
+          const updated = await volunteerService.updateEventRequestStatus(Number(requestId), body.status);
           if (!updated) return json({ error: "Request not found" }, 404);
 
           return json(updated);

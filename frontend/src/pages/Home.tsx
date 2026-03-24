@@ -31,7 +31,7 @@ const moduleCards: ModuleCardConfig[] = [
   {
     key: "events",
     title: "Activities & Events",
-    description: "Browse upcoming volunteer opportunities and register. (Coming Soon)",
+    description: "Browse upcoming volunteer opportunities and register.",
     icon: "📅",
     onClickView: "events",
     iconClassName: "bg-blue-200 text-gray-500",

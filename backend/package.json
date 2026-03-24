@@ -11,5 +11,8 @@
   },
   "scripts": {
     "dev": "bun --hot src/index.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.100.0"
   }
 }
