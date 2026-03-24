@@ -1,1 +1,1 @@
-export const API_BASE = `${process.env.BUN_PUBLIC_BACKEND_URL}`;
+export const API_BASE = `https://volunteer-management-comp2171-production.up.railway.app`;
