@@ -186,9 +186,10 @@ export default function Events({ navigateTo }: EventsProps) {
     };
 
     const filteredEvents = useMemo(() => {
-        const roleVisible = role === "Volunteer" ? events.filter((ev) => ev.status !== "Draft") : events;
+        const roleVisible = role === "Volunteer" ? events.filter((ev) => ev && ev.status !== "Draft") : events;
 
         const filtered = roleVisible.filter((ev) => {
+            if (!ev) return false;
             const matchName = ev.name.toLowerCase().includes(searchTerm.toLowerCase());
             const matchStatus = statusFilter ? ev.status === statusFilter : true;
             return matchName && matchStatus;

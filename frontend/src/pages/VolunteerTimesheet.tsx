@@ -99,7 +99,16 @@ export default function VolunteerTimesheet({ navigateTo }: { navigateTo?: (view:
 
     const handleSaveClick = async (id: number) => {
         try {
-            const updated = await apiService.updateRecord(selectedVolunteer, id, Number(editHours));
+            if (!selectedVolunteer) {
+                addToast({ message: 'No volunteer selected.', type: 'error' });
+                return;
+            }
+            const hoursValue = Number(editHours);
+            if (isNaN(hoursValue) || hoursValue < 0) {
+                addToast({ message: 'Hours must be a valid non-negative number.', type: 'error' });
+                return;
+            }
+            const updated = await apiService.updateRecord(selectedVolunteer, id, hoursValue);
             setRecords(records.map(rec => rec.id === id ? updated : rec));
             addToast({ message: 'Record updated successfully.', type: 'success' });
         } catch (e) {

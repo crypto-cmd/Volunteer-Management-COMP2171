@@ -1,0 +1,55 @@
+@startuml
+skinparam maxMessageSize 150
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam participant {
+    BackgroundColor White
+    BorderColor #2A5D9A
+}
+skinparam sequence {
+    ArrowColor #2A5D9A
+    LifeLineBorderColor #2A5D9A
+    LifeLineBackgroundColor #EBF4FA
+}
+
+actor "Admin" as Admin
+participant "EventsPage\n<<Boundary>>" as UI
+participant "EventApiService\n<<Proxy>>" as API
+participant "ManageEventsService\n<<Controller>>" as Service
+participant "EventRepository\n<<Data Access>>" as Repo
+database "Supabase\n<<Database>>" as DB
+
+Admin -> UI : Fills form & clicks "Save Activity"
+activate UI
+
+UI -> API : createEvent(payload)
+activate API
+
+API -> Service : POST /api/events (JSON)
+activate Service
+
+Service -> Repo : create(new Event(...))
+activate Repo
+
+Repo -> DB : INSERT INTO events
+activate DB
+DB --> Repo : Success/Failure
+deactivate DB
+
+Repo --> Service : Event
+deactivate Repo
+
+
+Service --> API : JSON Response
+deactivate Service
+
+API --> UI : returns EventRecord
+deactivate API
+
+UI -> UI : setEvents([...prev, created])
+UI -> UI : addToast(...)
+
+UI --> Admin : Displays updated activity list & Success Toast
+deactivate UI
+
+@enduml
