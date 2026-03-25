@@ -7,7 +7,7 @@ export class ManageEventsService {
     private eventRepository: EventRepository
   ) { }
 
-  createEvent(
+  async createEvent(
     id: string,
     name: string,
     description: string,
@@ -17,7 +17,7 @@ export class ManageEventsService {
     capacity: number,
     category: string,
     status: string,
-  ): void {
+  ): Promise<void> {
 
     const event = new Event(
       id,
@@ -31,19 +31,19 @@ export class ManageEventsService {
       status,
     );
 
-    this.eventRepository.create(event);
+    await this.eventRepository.create(event);
 
   }
 
-  updateEvent(event: Event): void {
+  async updateEvent(event: Event): Promise<void> {
 
-    this.eventRepository.update(event);
+    await this.eventRepository.update(event);
 
   }
 
-  deleteEvent(eventId: string): void {
+  async deleteEvent(eventId: string): Promise<void> {
 
-    this.eventRepository.delete(eventId);
+    await this.eventRepository.delete(eventId);
 
   }
 

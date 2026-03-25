@@ -128,20 +128,12 @@ export default function Events({ navigateTo }: EventsProps) {
             const existing = events.some((ev) => ev && ev.id === formData.id);
             if (existing) {
                 const updated = await eventApi.updateEvent(formData.id, payload);
-                if (updated) {
-                    setEvents((prev) => prev.map((ev) => (ev && ev.id === updated.id ? updated : ev)));
-                    addToast({ message: "Activity updated.", type: "success" });
-                } else {
-                    throw new Error("Update returned invalid response");
-                }
+                setEvents((prev) => prev.map((ev) => (ev && ev.id === updated.id ? updated : ev)));
+                addToast({ message: "Activity updated.", type: "success" });
             } else {
                 const created = await eventApi.createEvent({ ...payload, id: formData.id });
-                if (created && created.id) {
-                    setEvents((prev) => [...prev, created]);
-                    addToast({ message: "Activity created.", type: "success" });
-                } else {
-                    throw new Error("Create returned invalid response");
-                }
+                setEvents((prev) => [...prev, created]);
+                addToast({ message: "Activity created.", type: "success" });
             }
             setIsModalOpen(false);
         } catch (err) {

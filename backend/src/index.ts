@@ -99,7 +99,7 @@ const server = Bun.serve({
         }
 
         try {
-          eventService.createEvent(
+          await eventService.createEvent(
             body.id,
             body.name,
             body.description,
