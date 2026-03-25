@@ -125,15 +125,23 @@ export default function Events({ navigateTo }: EventsProps) {
         };
 
         try {
-            const existing = events.some((ev) => ev.id === formData.id);
+            const existing = events.some((ev) => ev && ev.id === formData.id);
             if (existing) {
                 const updated = await eventApi.updateEvent(formData.id, payload);
-                setEvents((prev) => prev.map((ev) => (ev.id === updated.id ? updated : ev)));
-                addToast({ message: "Activity updated.", type: "success" });
+                if (updated) {
+                    setEvents((prev) => prev.map((ev) => (ev && ev.id === updated.id ? updated : ev)));
+                    addToast({ message: "Activity updated.", type: "success" });
+                } else {
+                    throw new Error("Update returned invalid response");
+                }
             } else {
                 const created = await eventApi.createEvent({ ...payload, id: formData.id });
-                setEvents((prev) => [...prev, created]);
-                addToast({ message: "Activity created.", type: "success" });
+                if (created && created.id) {
+                    setEvents((prev) => [...prev, created]);
+                    addToast({ message: "Activity created.", type: "success" });
+                } else {
+                    throw new Error("Create returned invalid response");
+                }
             }
             setIsModalOpen(false);
         } catch (err) {
@@ -245,7 +253,11 @@ export default function Events({ navigateTo }: EventsProps) {
 
     const eventById = useMemo(() => {
         const map = new Map<string, EventRecord>();
-        events.forEach((event) => map.set(event.id, event));
+        events.forEach((event) => {
+            if (event && event.id) {
+                map.set(event.id, event);
+            }
+        });
         return map;
     }, [events]);
 
