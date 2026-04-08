@@ -9,7 +9,7 @@ type ModuleCardConfig = {
   title: string;
   description: string;
   icon: string;
-  onClickView?: string;
+  onClickView: string;
   disabled?: boolean;
   cardClassName?: string;
   iconClassName?: string;
@@ -39,11 +39,22 @@ const moduleCards: ModuleCardConfig[] = [
     descriptionClassName: "text-gray-500",
   },
   {
+    key: "profile",
+    title: "My Profile",
+    description: "Update your personal details and keep your account information current.",
+    icon: "👤",
+    onClickView: "profile",
+    iconClassName: "bg-blue-100 text-blue-700",
+    titleClassName: "text-gray-800",
+    descriptionClassName: "text-gray-600",
+  },
+  {
     key: "awards",
     title: "Awards & Badges",
     description: "View your achievements and milestones. (Coming Soon)",
     icon: "🏆",
     disabled: true,
+    onClickView: "",
     cardClassName: "bg-gray-50 border-gray-200 opacity-60",
     iconClassName: "bg-gray-200 text-gray-500",
     titleClassName: "text-gray-800",

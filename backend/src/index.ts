@@ -1,4 +1,3 @@
-import { join } from "path";
 import { type EventRequestStatus, Event } from "@models";
 import { EventRepository, VolunteerRepository } from "./repositories";
 import { ManageEventsService, VolunteerService } from "./services";
@@ -28,14 +27,162 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
+const STUDENT_ID_REGEX = /^620\d{6}$/;
+
+function isValidStudentId(value: string): boolean {
+  return STUDENT_ID_REGEX.test(value);
+}
+
 function json(body: unknown, status = 200) {
   return Response.json(body, { status, headers: corsHeaders });
+}
+
+async function requireAdmin(req: Request): Promise<Response | null> {
+  const studentId = req.headers.get("x-student-id")?.trim() || "";
+  const role = req.headers.get("x-user-role")?.trim() || "";
+
+  if (!studentId || !isValidStudentId(studentId)) {
+    return json({ error: "Missing or invalid admin identity" }, 401);
+  }
+
+  if (role !== "Admin") {
+    return json({ error: "Admin access required" }, 403);
+  }
+
+  const isAdmin = await volunteerService.isAdmin(studentId);
+  if (!isAdmin) {
+    return json({ error: "Admin access denied" }, 403);
+  }
+
+  return null;
 }
 
 const server = Bun.serve({
   port: process.env.BACKEND_PORT || 8080,
   routes: {
     "/": () => new Response("Volunteer Management API"),
+
+    "/api/auth/login": {
+      async POST(req) {
+        const body = await req.json() as { studentId?: string; password?: string };
+        const studentId = body.studentId?.trim() || "";
+
+        if (!studentId || !body.password) {
+          return json({ error: "studentId and password are required" }, 400);
+        }
+
+        if (!isValidStudentId(studentId)) {
+          return json({ error: "studentId must follow 620XXXXXX format" }, 400);
+        }
+
+        try {
+          const user = await volunteerService.login(studentId, body.password);
+          if (!user) return json({ error: "Invalid credentials" }, 401);
+          return json(user);
+        } catch (e: any) {
+          return json({ error: e.message }, 400);
+        }
+      },
+    },
+
+    "/api/auth/register": {
+      async POST(req) {
+        const body = await req.json() as {
+          studentId?: string;
+          name?: string;
+          password?: string;
+          email?: string;
+          phone?: string;
+          major?: string;
+          yearOfStudy?: string;
+        };
+
+        const studentId = body.studentId?.trim() || "";
+        const name = body.name?.trim() || "";
+        const password = body.password || "";
+
+        if (!studentId || !name || !password) {
+          return json({ error: "studentId, name and password are required" }, 400);
+        }
+
+        if (!isValidStudentId(studentId)) {
+          return json({ error: "studentId must follow 620XXXXXX format" }, 400);
+        }
+
+        if (password.length < 6) {
+          return json({ error: "Password must be at least 6 characters" }, 400);
+        }
+
+        try {
+          const created = await volunteerService.registerVolunteer({
+            studentId,
+            name,
+            password,
+            email: body.email?.trim(),
+            phone: body.phone?.trim(),
+            major: body.major?.trim(),
+            yearOfStudy: body.yearOfStudy?.trim(),
+            role: "volunteer",
+          });
+          return json(created, 201);
+        } catch (e: any) {
+          return json({ error: e.message }, 400);
+        }
+      },
+    },
+
+    "/api/profile/:studentId": {
+      async GET(req) {
+        const { studentId } = req.params;
+
+        if (!isValidStudentId(studentId)) {
+          return json({ error: "studentId must follow 620XXXXXX format" }, 400);
+        }
+
+        try {
+          const profile = await volunteerService.getUserProfile(studentId);
+          if (!profile) return json({ error: "User not found" }, 404);
+          return json(profile);
+        } catch (e: any) {
+          return json({ error: e.message }, 400);
+        }
+      },
+      async PUT(req) {
+        const { studentId } = req.params;
+
+        if (!isValidStudentId(studentId)) {
+          return json({ error: "studentId must follow 620XXXXXX format" }, 400);
+        }
+
+        const body = await req.json() as {
+          name?: string;
+          email?: string;
+          phone?: string;
+          major?: string;
+          yearOfStudy?: string;
+        };
+
+        const hasAnyUpdate = [
+          body.name,
+          body.email,
+          body.phone,
+          body.major,
+          body.yearOfStudy,
+        ].some((value) => value !== undefined);
+
+        if (!hasAnyUpdate) {
+          return json({ error: "No profile fields supplied" }, 400);
+        }
+
+        try {
+          const updated = await volunteerService.updateUserProfile(studentId, body);
+          if (!updated) return json({ error: "User not found" }, 404);
+          return json(updated);
+        } catch (e: any) {
+          return json({ error: e.message }, 400);
+        }
+      },
+    },
 
     "/api/volunteers": {
       async GET(req) {
@@ -49,6 +196,11 @@ const server = Bun.serve({
     "/api/volunteers/:id/records": {
       async GET(req) {
         const { id } = req.params;
+
+        if (!isValidStudentId(id)) {
+          return json({ error: "Volunteer ID must follow 620XXXXXX format" }, 400);
+        }
+
         const result = await volunteerService.getVolunteerRecords(id);
         if (!result) return json({ error: "Volunteer not found" }, 404);
         return json(result);
@@ -57,7 +209,15 @@ const server = Bun.serve({
 
     "/api/volunteers/:id/records/:recordId": {
       async PUT(req) {
+        const denied = await requireAdmin(req);
+        if (denied) return denied;
+
         const { id, recordId } = req.params;
+
+        if (!isValidStudentId(id)) {
+          return json({ error: "Volunteer ID must follow 620XXXXXX format" }, 400);
+        }
+
         const body = await req.json() as { hoursWorked?: number };
 
         if (typeof body.hoursWorked !== "number" || body.hoursWorked < 0) {
@@ -79,8 +239,10 @@ const server = Bun.serve({
         return json(await eventService.getAllEvents());
       },
       async POST(req) {
+        const denied = await requireAdmin(req);
+        if (denied) return denied;
+
         const body = await req.json() as {
-          id?: string;
           name?: string;
           description?: string;
           date?: string;
@@ -92,15 +254,14 @@ const server = Bun.serve({
         };
 
         if (
-          !body.id || !body.name || !body.description || !body.date || !body.time || !body.location ||
+          !body.name || !body.description || !body.date || !body.time || !body.location ||
           typeof body.capacity !== "number" || !body.category || !body.status
         ) {
           return json({ error: "Invalid event payload" }, 400);
         }
 
         try {
-          await eventService.createEvent(
-            body.id,
+          const created = await eventService.createEvent(
             body.name,
             body.description,
             body.date,
@@ -110,7 +271,6 @@ const server = Bun.serve({
             body.category,
             body.status,
           );
-          const created = await eventService.getEvent(body.id);
           return json(created, 201);
         } catch (e: any) {
           return json({ error: e.message }, 400);
@@ -125,6 +285,9 @@ const server = Bun.serve({
         return json(event);
       },
       async PUT(req) {
+        const denied = await requireAdmin(req);
+        if (denied) return denied;
+
         const { id } = req.params;
         const body = await req.json() as {
           name?: string;
@@ -160,6 +323,9 @@ const server = Bun.serve({
         }
       },
       async DELETE(req) {
+        const denied = await requireAdmin(req);
+        if (denied) return denied;
+
         try {
           await eventService.deleteEvent(req.params.id);
           return json({ success: true });
@@ -173,13 +339,18 @@ const server = Bun.serve({
       async POST(req) {
         const { id: eventId } = req.params;
         const body = await req.json() as { volunteerId?: string };
+        const volunteerId = body.volunteerId?.trim() || "";
 
-        if (!body.volunteerId) {
+        if (!volunteerId) {
           return json({ error: "volunteerId is required" }, 400);
         }
 
+        if (!isValidStudentId(volunteerId)) {
+          return json({ error: "volunteerId must follow 620XXXXXX format" }, 400);
+        }
+
         try {
-          const created = await volunteerService.createEventRequest(body.volunteerId, eventId);
+          const created = await volunteerService.createEventRequest(volunteerId, eventId);
           return json(created, 201);
         } catch (e: any) {
           return json({ error: e.message }, 400);
@@ -198,6 +369,10 @@ const server = Bun.serve({
           return json({ error: "Invalid status" }, 400);
         }
 
+        if (volunteerId && !isValidStudentId(volunteerId)) {
+          return json({ error: "volunteerId must follow 620XXXXXX format" }, 400);
+        }
+
         return json(await volunteerService.getEventRequests({
           eventId,
           volunteerId,
@@ -208,6 +383,9 @@ const server = Bun.serve({
 
     "/api/event-requests/:requestId": {
       async PUT(req) {
+        const denied = await requireAdmin(req);
+        if (denied) return denied;
+
         const { requestId } = req.params;
         const body = await req.json() as { status?: EventRequestStatus };
 

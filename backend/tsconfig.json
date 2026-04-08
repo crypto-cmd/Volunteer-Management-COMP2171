@@ -2,7 +2,12 @@
   "compilerOptions": {
     // Environment setup & latest features
     "lib": [
-      "ESNext"
+      "ESNext",
+      "DOM"
+    ],
+    "types": [
+      "node",
+      "bun"
     ],
     "target": "ESNext",
     "module": "Preserve",
@@ -14,6 +19,7 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
+    "ignoreDeprecations": "6.0",
     // Path aliases
     "baseUrl": "./src",
     "paths": {

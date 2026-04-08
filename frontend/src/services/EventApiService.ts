@@ -1,4 +1,5 @@
 import { API_BASE } from "./api";
+import { getAuthHeaders } from "./AuthApiService";
 
 export interface EventRecord {
     id: string;
@@ -40,10 +41,13 @@ export class EventApiService {
         return res.json();
     }
 
-    async createEvent(payload: EventRecord): Promise<EventRecord> {
+    async createEvent(payload: EventPayload): Promise<EventRecord> {
         const res = await fetch(`${this.baseUrl}/api/events`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeaders(),
+            },
             body: JSON.stringify(payload),
         });
         if (!res.ok) throw new Error("Failed to create event");
@@ -53,7 +57,10 @@ export class EventApiService {
     async updateEvent(eventId: string, payload: EventPayload): Promise<EventRecord> {
         const res = await fetch(`${this.baseUrl}/api/events/${encodeURIComponent(eventId)}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeaders(),
+            },
             body: JSON.stringify(payload),
         });
         if (!res.ok) throw new Error("Failed to update event");
@@ -63,6 +70,7 @@ export class EventApiService {
     async deleteEvent(eventId: string): Promise<void> {
         const res = await fetch(`${this.baseUrl}/api/events/${encodeURIComponent(eventId)}`, {
             method: "DELETE",
+            headers: getAuthHeaders(),
         });
         if (!res.ok) throw new Error("Failed to delete event");
     }
@@ -96,7 +104,10 @@ export class EventApiService {
     async updateEventRequestStatus(requestId: number, status: EventRequestStatus): Promise<EventRequestRecord> {
         const res = await fetch(`${this.baseUrl}/api/event-requests/${requestId}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                ...getAuthHeaders(),
+            },
             body: JSON.stringify({ status }),
         });
         if (!res.ok) {

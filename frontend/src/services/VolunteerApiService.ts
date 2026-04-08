@@ -1,4 +1,5 @@
 import { API_BASE } from "./api";
+import { getAuthHeaders } from "./AuthApiService";
 
 export interface Volunteer {
     id: string;
@@ -47,7 +48,10 @@ export class VolunteerApiService {
             `${this.baseUrl}/api/volunteers/${encodeURIComponent(volunteerId)}/records/${recordId}`,
             {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    ...getAuthHeaders(),
+                },
                 body: JSON.stringify({ hoursWorked }),
             }
         );

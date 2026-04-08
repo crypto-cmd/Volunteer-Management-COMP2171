@@ -24,8 +24,8 @@ export class EventRepository {
                 e.id,
                 e.name,
                 e.description,
-                e.event_date, 
-                e.event_time, 
+                e.event_date,
+                e.event_time,
                 e.location,
                 e.capacity,
                 e.category,
@@ -60,22 +60,30 @@ export class EventRepository {
         );
     }
 
-    async create(event: Event): Promise<void> {
-        const eventData = event.toJSON();
-
-        const { error } = await this.supabase
+    async create(
+        name: string,
+        description: string,
+        date: string,
+        time: string,
+        location: string,
+        capacity: number,
+        category: string,
+        status: string,
+    ): Promise<Event> {
+        const { data, error } = await this.supabase
             .from('events')
             .insert({
-                id: eventData.id,
-                name: eventData.name,
-                description: eventData.description,
-                event_date: eventData.date, // Mapping model to DB schema
-                event_time: eventData.time, // Mapping model to DB schema
-                location: eventData.location,
-                capacity: eventData.capacity,
-                category: eventData.category,
-                status: eventData.status
-            });
+                name,
+                description,
+                event_date: date,
+                event_time: time,
+                location,
+                capacity,
+                category,
+                status,
+            })
+            .select('*')
+            .single();
 
         if (error) {
             if (error.code === '23505') { // Postgres unique violation code
@@ -83,6 +91,18 @@ export class EventRepository {
             }
             throw new Error(`Failed to create event: ${error.message}`);
         }
+
+        return new Event(
+            data.id,
+            data.name,
+            data.description,
+            data.event_date,
+            data.event_time,
+            data.location,
+            data.capacity,
+            data.category,
+            data.status,
+        );
     }
 
     async update(event: Event): Promise<void> {

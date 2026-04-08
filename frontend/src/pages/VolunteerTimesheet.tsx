@@ -7,9 +7,8 @@ import VolunteerDropdownCard from '@components/VolunteerDropdownCard';
 
 const apiService = new VolunteerApiService();
 
-export default function VolunteerTimesheet({ navigateTo }: { navigateTo?: (view: string) => void }) {
-    const [role, setRole] = useState('Volunteer'); // 'Volunteer' | 'Admin'
-    const [selectedVolunteer, setSelectedVolunteer] = useState('V001');
+export default function VolunteerTimesheet({ navigateTo, role = 'Volunteer' }: { navigateTo?: (view: string) => void; role?: 'Volunteer' | 'Admin' }) {
+    const [selectedVolunteer, setSelectedVolunteer] = useState('');
     const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
     const [volunteerSearch, setVolunteerSearch] = useState('');
     const [searchResults, setSearchResults] = useState<Volunteer[]>([]);
@@ -22,10 +21,10 @@ export default function VolunteerTimesheet({ navigateTo }: { navigateTo?: (view:
     const [endDate, setEndDate] = useState('');
 
     // Sorting states 
-    const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
+    const [sortConfig, setSortConfig] = useState<{ key: 'date' | 'eventName' | 'hoursWorked'; direction: 'asc' | 'desc' }>({ key: 'date', direction: 'desc' });
 
     // Admin Editing state 
-    const [editingId, setEditingId] = useState(null);
+    const [editingId, setEditingId] = useState<number | null>(null);
     const [editHours, setEditHours] = useState('');
 
 
@@ -43,15 +42,16 @@ export default function VolunteerTimesheet({ navigateTo }: { navigateTo?: (view:
 
     // Fetch records on mount and when selected volunteer changes
     useEffect(() => {
+        if (!selectedVolunteer) return;
         fetchRecords(selectedVolunteer);
-    }, [selectedVolunteer, role, fetchRecords]);
+    }, [selectedVolunteer, fetchRecords]);
 
     useEffect(() => {
         apiService.searchVolunteers('')
             .then((all) => {
                 setVolunteers(all);
                 if (all.length > 0 && !all.some(v => v.id === selectedVolunteer)) {
-                    setSelectedVolunteer(all[0].id);
+                    setSelectedVolunteer(all[0]!.id);
                 }
             })
             .catch(e => console.error(e));
@@ -67,8 +67,8 @@ export default function VolunteerTimesheet({ navigateTo }: { navigateTo?: (view:
     }, [volunteerSearch]);
 
     // Handle Sorting
-    const requestSort = (key: string) => {
-        let direction = 'asc';
+    const requestSort = (key: 'date' | 'eventName' | 'hoursWorked') => {
+        let direction: 'asc' | 'desc' = 'asc';
         if (sortConfig.key === key && sortConfig.direction === 'asc') {
             direction = 'desc';
         }
@@ -188,7 +188,6 @@ export default function VolunteerTimesheet({ navigateTo }: { navigateTo?: (view:
         <div className="p-6 max-w-5xl mx-auto font-sans">
             <PageTopBar
                 role={role}
-                onToggleRole={() => setRole(role === 'Volunteer' ? 'Admin' : 'Volunteer')}
                 navigateTo={navigateTo}
             />
 

@@ -1,5 +1,34 @@
 import { SupabaseClient } from "@supabase/supabase-js";
-import { EventRequest, type EventRequestStatus, Volunteer, TimesheetRecord } from "@models";
+import { EventRequest, type EventRequestStatus, UserProfile, Volunteer, TimesheetRecord } from "@models";
+
+type ProfileUpdates = {
+    name?: string;
+    email?: string;
+    phone?: string;
+    major?: string;
+    yearOfStudy?: string;
+};
+
+type RegisterPayload = {
+    studentId: string;
+    name: string;
+    password: string;
+    email?: string;
+    phone?: string;
+    major?: string;
+    yearOfStudy?: string;
+    role?: "admin" | "volunteer";
+};
+
+function mapRole(role: string | null | undefined): "Admin" | "Volunteer" {
+    return role === "admin" ? "Admin" : "Volunteer";
+}
+
+function relationName(relation: { name: string } | { name: string }[] | null | undefined): string | undefined {
+    if (!relation) return undefined;
+    if (Array.isArray(relation)) return relation[0]?.name;
+    return relation.name;
+}
 
 export class VolunteerRepository {
     private supabase: SupabaseClient;
@@ -31,6 +60,134 @@ export class VolunteerRepository {
         }
 
         return new Volunteer(data.id, data.name);
+    }
+
+    async findByStudentIdAndPassword(studentId: string, password: string): Promise<UserProfile | null> {
+        const { data, error } = await this.supabase
+            .from('volunteers')
+            .select('id, name, role, email, phone, major, year_of_study')
+            .eq('id', studentId)
+            .eq('password', password)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') return null;
+            throw new Error(`Failed to authenticate user: ${error.message}`);
+        }
+
+        return new UserProfile(
+            data.id,
+            data.name || "",
+            mapRole(data.role),
+            data.email || "",
+            data.phone || "",
+            data.major || "",
+            data.year_of_study || ""
+        );
+    }
+
+    async getVolunteerProfile(studentId: string): Promise<UserProfile | null> {
+        const { data, error } = await this.supabase
+            .from('volunteers')
+            .select('id, name, role, email, phone, major, year_of_study')
+            .eq('id', studentId)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') return null;
+            throw new Error(`Failed to fetch profile: ${error.message}`);
+        }
+
+        return new UserProfile(
+            data.id,
+            data.name || "",
+            mapRole(data.role),
+            data.email || "",
+            data.phone || "",
+            data.major || "",
+            data.year_of_study || ""
+        );
+    }
+
+    async updateVolunteerProfile(studentId: string, updates: ProfileUpdates): Promise<UserProfile | null> {
+        const payload = {
+            ...(updates.name !== undefined ? { name: updates.name } : {}),
+            ...(updates.email !== undefined ? { email: updates.email } : {}),
+            ...(updates.phone !== undefined ? { phone: updates.phone } : {}),
+            ...(updates.major !== undefined ? { major: updates.major } : {}),
+            ...(updates.yearOfStudy !== undefined ? { year_of_study: updates.yearOfStudy } : {}),
+        };
+
+        const { data, error } = await this.supabase
+            .from('volunteers')
+            .update(payload)
+            .eq('id', studentId)
+            .select('id, name, role, email, phone, major, year_of_study')
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') return null;
+            throw new Error(`Failed to update profile: ${error.message}`);
+        }
+
+        return new UserProfile(
+            data.id,
+            data.name || "",
+            mapRole(data.role),
+            data.email || "",
+            data.phone || "",
+            data.major || "",
+            data.year_of_study || ""
+        );
+    }
+
+    async createVolunteerAccount(payload: RegisterPayload): Promise<UserProfile> {
+        const { data, error } = await this.supabase
+            .from('volunteers')
+            .insert({
+                id: payload.studentId,
+                name: payload.name,
+                password: payload.password,
+                role: payload.role || 'volunteer',
+                email: payload.email || null,
+                phone: payload.phone || null,
+                major: payload.major || null,
+                year_of_study: payload.yearOfStudy || null,
+            })
+            .select('id, name, role, email, phone, major, year_of_study')
+            .single();
+
+        if (error) {
+            if (error.code === '23505') {
+                throw new Error('Account already exists for this student ID');
+            }
+            throw new Error(`Failed to create account: ${error.message}`);
+        }
+
+        return new UserProfile(
+            data.id,
+            data.name || "",
+            mapRole(data.role),
+            data.email || "",
+            data.phone || "",
+            data.major || "",
+            data.year_of_study || ""
+        );
+    }
+
+    async isAdmin(studentId: string): Promise<boolean> {
+        const { data, error } = await this.supabase
+            .from('volunteers')
+            .select('role')
+            .eq('id', studentId)
+            .single();
+
+        if (error) {
+            if (error.code === 'PGRST116') return false;
+            throw new Error(`Failed to verify admin role: ${error.message}`);
+        }
+
+        return data.role === 'admin';
     }
 
     async getRecordsForVolunteer(volunteerId: string): Promise<TimesheetRecord[]> {
@@ -109,8 +266,8 @@ export class VolunteerRepository {
             r.volunteer_id,
             r.status as EventRequestStatus,
             r.requested_at,
-            r.events?.name,      // Extracted from the join
-            r.volunteers?.name   // Extracted from the join
+            relationName(r.events),
+            relationName(r.volunteers)
         ));
     }
 
@@ -184,7 +341,8 @@ export class VolunteerRepository {
             throw new Error(`Request not found: ${reqError.message}`);
         }
 
-        const event = req.events;
+        const event = Array.isArray(req.events) ? req.events[0] : req.events;
+        if (!event) throw new Error("Event not found for request");
         const wasAccepted = req.status === 'Accepted';
 
         // 2. Capacity Check if accepting
@@ -233,8 +391,8 @@ export class VolunteerRepository {
             req.volunteer_id,
             status,
             req.requested_at,
-            event.name,
-            req.volunteers.name
+            relationName(event),
+            relationName(req.volunteers)
         );
     }
 }

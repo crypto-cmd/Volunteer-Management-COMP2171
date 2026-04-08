@@ -24,7 +24,7 @@ function toForm(event?: EventRecord): EventRecord {
     if (event) return { ...event };
 
     return {
-        id: `EVT-${Date.now()}`,
+        id: "",
         name: "",
         date: "",
         time: "",
@@ -36,12 +36,11 @@ function toForm(event?: EventRecord): EventRecord {
     };
 }
 
-export default function Events({ navigateTo }: EventsProps) {
-    const [role, setRole] = useState("Volunteer");
+export default function Events({ navigateTo, role = "Volunteer" }: EventsProps & { role?: "Volunteer" | "Admin" }) {
     const [events, setEvents] = useState<EventRecord[]>([]);
     const [requests, setRequests] = useState<EventRequestRecord[]>([]);
     const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
-    const [selectedVolunteerId, setSelectedVolunteerId] = useState("V001");
+    const [selectedVolunteerId, setSelectedVolunteerId] = useState("");
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState<EventRecord>(toForm());
@@ -70,7 +69,7 @@ export default function Events({ navigateTo }: EventsProps) {
             .then(([, , foundVolunteers]) => {
                 setVolunteers(foundVolunteers);
                 if (foundVolunteers.length > 0 && !foundVolunteers.some((v) => v.id === selectedVolunteerId)) {
-                    setSelectedVolunteerId(foundVolunteers[0].id);
+                    setSelectedVolunteerId(foundVolunteers[0]!.id);
                 }
             })
             .catch((e) => {
@@ -125,13 +124,13 @@ export default function Events({ navigateTo }: EventsProps) {
         };
 
         try {
-            const existing = events.some((ev) => ev && ev.id === formData.id);
+            const existing = Boolean(formData.id) && events.some((ev) => ev && ev.id === formData.id);
             if (existing) {
                 const updated = await eventApi.updateEvent(formData.id, payload);
                 setEvents((prev) => prev.map((ev) => (ev && ev.id === updated.id ? updated : ev)));
                 addToast({ message: "Activity updated.", type: "success" });
             } else {
-                const created = await eventApi.createEvent({ ...payload, id: formData.id });
+                const created = await eventApi.createEvent(payload);
                 setEvents((prev) => [...prev, created]);
                 addToast({ message: "Activity created.", type: "success" });
             }
@@ -432,7 +431,6 @@ export default function Events({ navigateTo }: EventsProps) {
         <div className="p-6 max-w-6xl mx-auto font-sans relative">
             <PageTopBar
                 role={role}
-                onToggleRole={() => setRole(role === "Volunteer" ? "Admin" : "Volunteer")}
                 navigateTo={navigateTo}
             />
 

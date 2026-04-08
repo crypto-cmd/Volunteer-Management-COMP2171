@@ -1,5 +1,24 @@
 import { VolunteerRepository } from "@repositories";
-import { type EventRequestStatus, Volunteer, TimesheetRecord } from "@models";
+import { type EventRequestStatus, UserProfile, Volunteer, TimesheetRecord } from "@models";
+
+type ProfileUpdates = {
+    name?: string;
+    email?: string;
+    phone?: string;
+    major?: string;
+    yearOfStudy?: string;
+};
+
+type RegisterPayload = {
+    studentId: string;
+    name: string;
+    password: string;
+    email?: string;
+    phone?: string;
+    major?: string;
+    yearOfStudy?: string;
+    role?: "admin" | "volunteer";
+};
 
 export class VolunteerService {
     private readonly repo: VolunteerRepository;
@@ -35,5 +54,25 @@ export class VolunteerService {
 
     async updateEventRequestStatus(requestId: number, status: EventRequestStatus) {
         return this.repo.updateEventRequestStatus(requestId, status);
+    }
+
+    async login(studentId: string, password: string): Promise<UserProfile | null> {
+        return this.repo.findByStudentIdAndPassword(studentId, password);
+    }
+
+    async getUserProfile(studentId: string): Promise<UserProfile | null> {
+        return this.repo.getVolunteerProfile(studentId);
+    }
+
+    async updateUserProfile(studentId: string, updates: ProfileUpdates): Promise<UserProfile | null> {
+        return this.repo.updateVolunteerProfile(studentId, updates);
+    }
+
+    async registerVolunteer(payload: RegisterPayload): Promise<UserProfile> {
+        return this.repo.createVolunteerAccount(payload);
+    }
+
+    async isAdmin(studentId: string): Promise<boolean> {
+        return this.repo.isAdmin(studentId);
     }
 }
