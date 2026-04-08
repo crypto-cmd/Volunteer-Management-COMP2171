@@ -1,0 +1,15 @@
+sequenceDiagram
+autonumber
+actor User as Admin/Volunteer
+participant AnnouncementsPage
+participant AnnouncementApiService
+participant AnnouncementService
+participant AnnouncementRepo as AnnouncementRepository
+
+User->>+AnnouncementsPage: Open Announcements
+AnnouncementsPage->>+AnnouncementApiService: getAnnouncements()
+AnnouncementApiService->>+AnnouncementService: getAnnouncements()
+AnnouncementService->>+AnnouncementRepo: getAnnouncements()
+AnnouncementRepo-->>-AnnouncementService: Announcement[]
+AnnouncementService-->>-AnnouncementApiService: Announcement[]
+AnnouncementApiService-->>-AnnouncementsPage: Announcement[]

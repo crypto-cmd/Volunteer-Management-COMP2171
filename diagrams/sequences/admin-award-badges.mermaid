@@ -1,0 +1,26 @@
+sequenceDiagram
+autonumber
+actor Admin
+participant BadgesPage
+participant BadgeApiService
+participant Toast
+
+Admin->>+BadgesPage: Open Badges (Admin)
+rect rgba(255, 249, 196, 0.75)
+BadgesPage->>BadgesPage: [Include] shared/view-badges.mermaid
+end
+BadgesPage-->>Admin: Display Badge[]
+
+rect rgba(224, 244, 255, 0.6)
+alt Create badge
+  Admin->>+BadgesPage: Choose create badge
+  BadgesPage->>+BadgeApiService: createBadge(name, description, icon)
+  BadgeApiService-->>-BadgesPage: Badge
+  BadgesPage-)Toast: addToast(success)
+else Assign badge
+  Admin->>+BadgesPage: Choose assign badge
+  BadgesPage->>+BadgeApiService: assignBadge(volunteerId, badgeId)
+  BadgeApiService-->>-BadgesPage: VolunteerBadge
+  BadgesPage-)Toast: addToast(success)
+end
+end

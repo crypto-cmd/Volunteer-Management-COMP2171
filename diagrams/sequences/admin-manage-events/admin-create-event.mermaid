@@ -1,0 +1,21 @@
+sequenceDiagram
+autonumber
+actor Admin
+participant EventsPage
+participant EventApiService
+participant VolunteerService
+participant VolunteerRepo as VolunteerRepository
+participant ManageEventsService
+participant EventRepo as EventRepository
+
+Admin->>+EventsPage: Submit create event form
+EventsPage->>+EventApiService: createEvent(payload)
+EventApiService->>+VolunteerService: isAdmin(studentId)
+VolunteerService->>+VolunteerRepo: isAdmin(studentId)
+VolunteerRepo-->>-VolunteerService: authorized
+VolunteerService-->>-EventApiService: authorized
+EventApiService->>+ManageEventsService: createEvent(...)
+ManageEventsService->>+EventRepo: create(...)
+EventRepo-->>-ManageEventsService: Event
+ManageEventsService-->>-EventApiService: Event
+EventApiService-->>-EventsPage: Event

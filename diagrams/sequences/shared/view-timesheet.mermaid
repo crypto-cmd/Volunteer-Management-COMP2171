@@ -1,0 +1,17 @@
+sequenceDiagram
+autonumber
+actor User as Admin/Volunteer
+participant TimesheetPage as VolunteerTimesheetPage
+participant VolunteerApiService
+participant VolunteerService
+participant VolunteerRepo as VolunteerRepository
+
+User->>+TimesheetPage: Open Timesheet
+TimesheetPage->>+VolunteerApiService: getVolunteerRecords(volunteerId)
+VolunteerApiService->>+VolunteerService: getVolunteerRecords(volunteerId)
+VolunteerService->>+VolunteerRepo: findVolunteerById(volunteerId)
+VolunteerRepo-->>-VolunteerService: Volunteer
+VolunteerService->>+VolunteerRepo: getRecordsForVolunteer(volunteerId)
+VolunteerRepo-->>-VolunteerService: TimesheetRecord[]
+VolunteerService-->>-VolunteerApiService: { volunteer, records }
+VolunteerApiService-->>-TimesheetPage: payload

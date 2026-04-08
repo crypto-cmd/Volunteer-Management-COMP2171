@@ -1,0 +1,33 @@
+sequenceDiagram
+autonumber
+actor Admin
+participant EventsPage
+participant EventApiService
+participant Toast
+
+Note over Admin,EventsPage: Manage Events includes View Events.
+
+Admin->>+EventsPage: Open Events (Admin)
+rect rgba(255, 249, 196, 0.75)
+EventsPage->>EventsPage: [Include] shared/view-events.mermaid
+end
+EventsPage-->>Admin: Display Event[]
+
+rect rgba(255, 236, 210, 0.6)
+alt Create event
+  Admin->>+EventsPage: Choose create event
+  EventsPage->>+EventApiService: createEvent(payload)
+  EventApiService-->>-EventsPage: Event
+  EventsPage-)Toast: addToast(success)
+else Update event
+  Admin->>+EventsPage: Choose update event
+  EventsPage->>+EventApiService: updateEvent(id, payload)
+  EventApiService-->>-EventsPage: updated event
+  EventsPage-)Toast: addToast(success)
+else Delete event
+  Admin->>+EventsPage: Choose delete event
+  EventsPage->>+EventApiService: deleteEvent(id)
+  EventApiService-->>-EventsPage: success
+  EventsPage-)Toast: addToast(success)
+end
+end

@@ -1,0 +1,21 @@
+sequenceDiagram
+autonumber
+actor Admin
+participant BadgesPage
+participant BadgeApiService
+participant VolunteerService
+participant VolunteerRepo as VolunteerRepository
+participant BadgeService
+participant BadgeRepo as BadgeRepository
+
+Admin->>+BadgesPage: Submit assign badge
+BadgesPage->>+BadgeApiService: assignBadge(volunteerId, badgeId)
+BadgeApiService->>+VolunteerService: isAdmin(studentId)
+VolunteerService->>+VolunteerRepo: isAdmin(studentId)
+VolunteerRepo-->>-VolunteerService: authorized
+VolunteerService-->>-BadgeApiService: authorized
+BadgeApiService->>+BadgeService: assignBadge(volunteerId, badgeId)
+BadgeService->>+BadgeRepo: assignBadge(volunteerId, badgeId)
+BadgeRepo-->>-BadgeService: VolunteerBadge
+BadgeService-->>-BadgeApiService: VolunteerBadge
+BadgeApiService-->>-BadgesPage: VolunteerBadge

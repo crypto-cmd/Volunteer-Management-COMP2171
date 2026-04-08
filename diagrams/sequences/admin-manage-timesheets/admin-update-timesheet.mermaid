@@ -1,0 +1,19 @@
+sequenceDiagram
+autonumber
+actor Admin
+participant TimesheetPage as VolunteerTimesheetPage
+participant VolunteerApiService
+participant VolunteerService
+participant VolunteerRepo as VolunteerRepository
+
+Admin->>+TimesheetPage: Save updated hours
+TimesheetPage->>+VolunteerApiService: updateRecord(volunteerId, recordId, hours)
+VolunteerApiService->>+VolunteerService: isAdmin(studentId)
+VolunteerService->>+VolunteerRepo: isAdmin(studentId)
+VolunteerRepo-->>-VolunteerService: authorized
+VolunteerService-->>-VolunteerApiService: authorized
+VolunteerApiService->>+VolunteerService: updateRecord(volunteerId, recordId, hours)
+VolunteerService->>+VolunteerRepo: updateRecord(...)
+VolunteerRepo-->>-VolunteerService: TimesheetRecord
+VolunteerService-->>-VolunteerApiService: TimesheetRecord
+VolunteerApiService-->>-TimesheetPage: updated record

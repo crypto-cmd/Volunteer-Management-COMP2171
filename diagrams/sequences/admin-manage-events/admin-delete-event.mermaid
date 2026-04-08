@@ -1,0 +1,21 @@
+sequenceDiagram
+autonumber
+actor Admin
+participant EventsPage
+participant EventApiService
+participant VolunteerService
+participant VolunteerRepo as VolunteerRepository
+participant ManageEventsService
+participant EventRepo as EventRepository
+
+Admin->>+EventsPage: Confirm delete event
+EventsPage->>+EventApiService: deleteEvent(id)
+EventApiService->>+VolunteerService: isAdmin(studentId)
+VolunteerService->>+VolunteerRepo: isAdmin(studentId)
+VolunteerRepo-->>-VolunteerService: authorized
+VolunteerService-->>-EventApiService: authorized
+EventApiService->>+ManageEventsService: deleteEvent(id)
+ManageEventsService->>+EventRepo: delete(id)
+EventRepo-->>-ManageEventsService: void
+ManageEventsService-->>-EventApiService: void
+EventApiService-->>-EventsPage: success

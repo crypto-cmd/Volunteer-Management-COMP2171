@@ -1,0 +1,26 @@
+sequenceDiagram
+autonumber
+actor User as Admin/Volunteer
+participant ProfilePage
+participant AuthApiService
+participant VolunteerService
+participant VolunteerRepo as VolunteerRepository
+participant Toast
+
+User->>+ProfilePage: Open Profile
+ProfilePage->>+AuthApiService: getProfile(studentId)
+AuthApiService->>+VolunteerService: getUserProfile(studentId)
+VolunteerService->>+VolunteerRepo: getVolunteerProfile(studentId)
+VolunteerRepo-->>-VolunteerService: UserProfile
+VolunteerService-->>-AuthApiService: UserProfile
+AuthApiService-->>-ProfilePage: UserProfile
+ProfilePage-->>User: Display UserProfile
+
+User->>+ProfilePage: Choose save profile changes
+ProfilePage->>+AuthApiService: updateProfile(studentId, updates)
+AuthApiService->>+VolunteerService: updateUserProfile(studentId, updates)
+VolunteerService->>+VolunteerRepo: updateVolunteerProfile(studentId, updates)
+VolunteerRepo-->>-VolunteerService: UserProfile
+VolunteerService-->>-AuthApiService: UserProfile
+AuthApiService-->>-ProfilePage: updated UserProfile
+ProfilePage-)Toast: addToast(success)

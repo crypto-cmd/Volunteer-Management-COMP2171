@@ -1,0 +1,15 @@
+sequenceDiagram
+autonumber
+actor User as Admin/Volunteer
+participant EventsPage
+participant EventApiService
+participant ManageEventsService
+participant EventRepo as EventRepository
+
+User->>+EventsPage: Open Events
+EventsPage->>+EventApiService: getEvents()
+EventApiService->>+ManageEventsService: getAllEvents()
+ManageEventsService->>+EventRepo: findAll()
+EventRepo-->>-ManageEventsService: Event[]
+ManageEventsService-->>-EventApiService: Event[]
+EventApiService-->>-EventsPage: Event[]

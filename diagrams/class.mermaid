@@ -1,0 +1,326 @@
+---
+config:
+  layout: elk
+  class:
+    hideEmptyMembersBox: true
+  look: neo
+---
+classDiagram
+direction TB
+    class Announcement {
+	    +id: number
+	    +title: string
+	    +message: string
+	    +postedAt: string
+	    +postedBy: string
+	    +toJSON() : object
+    }
+
+    class Badge {
+	    +id: number
+	    +name: string
+	    +description: string
+	    +icon: string
+	    +createdAt: string
+	    +toJSON() : object
+    }
+
+    class Event {
+	    +id: string
+	    +name: string
+	    +description: string
+	    +date: string
+	    +time: string
+	    +location: string
+	    +capacity: number
+	    +category: string
+	    +status: string
+	    +toJSON() : object
+    }
+
+    class EventRequest {
+	    +id: number
+	    +eventId: string
+	    +volunteerId: string
+	    +status: string
+	    +requestedAt: string
+	    +eventName: string
+	    +volunteerName: string
+	    +setStatus(status: string) : void
+	    +toJSON() : object
+    }
+
+    class TimesheetRecord {
+	    +id: number
+	    +date: string
+	    +eventId: string
+	    +eventName: string
+	    +hoursWorked: number
+	    +updateHours(hours: number) : void
+	    +toJSON() : object
+    }
+
+    class UserProfile {
+	    +studentId: string
+	    +name: string
+	    +role: "Admin" | "Volunteer"
+	    +email: string
+	    +phone: string
+	    +major: string
+	    +yearOfStudy: string
+	    +toJSON() : object
+    }
+
+    class Volunteer {
+	    +id: string
+	    +name: string
+	    +matchesFuzzy(query: string) : boolean
+	    +toJSON() : object
+    }
+
+    class VolunteerBadge {
+	    +id: number
+	    +volunteerId: string
+	    +badgeId: number
+	    +awardedAt: string
+	    +badgeName: string
+	    +badgeDescription: string
+	    +badgeIcon: string
+	    +toJSON() : object
+    }
+
+    class VolunteerRepository {
+	    -supabase: SupabaseClient
+	    +findAllVolunteers() : Promise~Volunteer[]~
+	    +findVolunteerById(id: string) : Promise~Volunteer | null~
+	    +findByStudentIdAndPassword(studentId: string, password: string) : Promise~UserProfile | null~
+	    +getVolunteerProfile(studentId: string) : Promise~UserProfile | null~
+	    +updateVolunteerProfile(studentId: string, updates: ProfileUpdates) : Promise~UserProfile | null~
+	    +createVolunteerAccount(payload: RegisterPayload) : Promise~UserProfile~
+	    +isAdmin(studentId: string) : Promise~boolean~
+	    +getRecordsForVolunteer(volunteerId: string) : Promise~TimesheetRecord[]~
+	    +updateRecord(volunteerId: string, recordId: number, hoursWorked: number) : Promise~TimesheetRecord | null~
+    }
+
+    class EventRepository {
+	    -supabase: SupabaseClient
+	    +findAll() : Promise~Event[]~
+	    +findById(eventId: string) : Promise~Event | null~
+	    +create(name: string, description: string, date: string, time: string, location: string, capacity: number, category: string, status: string) : Promise~Event~
+	    +update(event: Event) : Promise~void~
+	    +delete(eventId: string) : Promise~void~
+    }
+
+    class BadgeRepository {
+	    -supabase: SupabaseClient
+	    +getBadges() : Promise~Badge[]~
+	    +createBadge(name: string, description: string, icon: string) : Promise~Badge~
+	    +getVolunteerBadges(volunteerId: string) : Promise~VolunteerBadge[]~
+	    +assignBadge(volunteerId: string, badgeId: number) : Promise~VolunteerBadge~
+    }
+
+    class AnnouncementRepository {
+	    -supabase: SupabaseClient
+	    +getAnnouncements() : Promise~Announcement[]~
+	    +createAnnouncement(title: string, message: string, postedBy: string) : Promise~Announcement~
+    }
+
+    class EventRequestRepository {
+	    -supabase: SupabaseClient
+	    +getEventRequests(filters) : Promise~EventRequest[]~
+	    +createEventRequest(volunteerId: string, eventId: string) : Promise~EventRequest~
+	    +updateEventRequestStatus(requestId: number, status: string) : Promise~EventRequest | null~
+    }
+
+    class VolunteerService {
+	    -volunteerRepo: VolunteerRepository
+	    +searchVolunteers(query: string) : Promise~Volunteer[]~
+	    +getVolunteerRecords(volunteerId: string) : Promise~object | null~
+	    +updateRecord(volunteerId: string, recordId: number, hoursWorked: number) : Promise~TimesheetRecord | null~
+	    +login(studentId: string, password: string) : Promise~UserProfile | null~
+	    +getUserProfile(studentId: string) : Promise~UserProfile | null~
+	    +updateUserProfile(studentId: string, updates) : Promise~UserProfile | null~
+	    +registerVolunteer(payload) : Promise~UserProfile~
+	    +isAdmin(studentId: string) : Promise~boolean~
+    }
+
+    class ManageEventsService {
+	    -eventRepository: EventRepository
+	    +createEvent(name: string, description: string, date: string, time: string, location: string, capacity: number, category: string, status: string) : Promise~Event~
+	    +updateEvent(event: Event) : Promise~void~
+	    +deleteEvent(eventId: string) : Promise~void~
+	    +getEvent(eventId: string) : Promise~Event | null~
+	    +getAllEvents() : Promise~Event[]~
+    }
+
+    class EventRequestService {
+	    -eventRequestRepo: EventRequestRepository
+	    +getEventRequests(filters) : Promise~EventRequest[]~
+	    +createEventRequest(volunteerId: string, eventId: string) : Promise~EventRequest~
+	    +updateEventRequestStatus(requestId: number, status: string) : Promise~EventRequest | null~
+    }
+
+    class AnnouncementService {
+	    -announcementRepo: AnnouncementRepository
+	    +getAnnouncements() : Promise~Announcement[]~
+	    +createAnnouncement(title: string, message: string, postedBy: string) : Promise~Announcement~
+    }
+
+    class BadgeService {
+	    -badgeRepo: BadgeRepository
+	    +getBadges() : Promise~Badge[]~
+	    +createBadge(name: string, description: string, icon: string) : Promise~Badge~
+	    +getVolunteerBadges(volunteerId: string) : Promise~VolunteerBadge[]~
+	    +assignBadge(volunteerId: string, badgeId: number) : Promise~VolunteerBadge~
+    }
+
+    class AuthApiService {
+	    +login(studentId: string, password: string) : Promise~object~
+	    +register(payload) : Promise~object~
+	    +getProfile(studentId: string) : Promise~object~
+	    +updateProfile(studentId: string, payload) : Promise~object~
+    }
+
+    class VolunteerApiService {
+	    -baseUrl: string
+	    +searchVolunteers(query: string, signal: AbortSignal) : Promise~object[]~
+	    +getVolunteerRecords(volunteerId: string) : Promise~object~
+	    +updateRecord(volunteerId: string, recordId: number, hoursWorked: number) : Promise~object~
+    }
+
+    class EventApiService {
+	    -baseUrl: string
+	    +getEvents() : Promise~object[]~
+	    +createEvent(payload) : Promise~object~
+	    +updateEvent(eventId: string, payload) : Promise~object~
+	    +deleteEvent(eventId: string) : Promise~void~
+	    +requestEventParticipation(eventId: string, volunteerId: string) : Promise~object~
+	    +getEventRequests(filters) : Promise~object[]~
+	    +updateEventRequestStatus(requestId: number, status: string) : Promise~object~
+    }
+
+    class BadgeApiService {
+	    +getBadges() : Promise~object[]~
+	    +createBadge(name: string, description: string, icon: string) : Promise~object~
+	    +getVolunteerBadges(volunteerId: string) : Promise~object[]~
+	    +assignBadge(volunteerId: string, badgeId: number) : Promise~object~
+    }
+
+    class AnnouncementApiService {
+	    +getAnnouncements() : Promise~object[]~
+	    +createAnnouncement(title: string, message: string) : Promise~object~
+    }
+
+    class App {
+	    -currentView: string
+	    -currentUser: object
+	    +handleLoginSuccess(user) : void
+	    +handleProfileUpdated(profile) : void
+	    +handleLogout() : void
+    }
+
+    class LoginPage {
+	    -mode: string
+	    -studentId: string
+	    -isLoading: boolean
+	    +handleSubmit(e) : Promise~void~
+    }
+
+    class HomePage {
+	    +navigateTo(view: string) : void
+    }
+
+    class EventsPage {
+	    -events: object[]
+	    -requests: object[]
+	    +handleCreateNew() : void
+	    +handleEdit(event) : void
+	    +handleSave(e) : Promise~void~
+    }
+
+    class AnnouncementsPage {
+	    -items: object[]
+	    +handleCreate(e) : Promise~void~
+    }
+
+    class BadgesPage {
+	    -badges: object[]
+	    -myBadges: object[]
+	    +handleCreateBadge(e) : Promise~void~
+	    +handleAssignBadge(e) : Promise~void~
+    }
+
+    class ProfilePage {
+	    -formData: object
+	    +handleInputChange(e) : void
+	    +handleSave(e) : Promise~void~
+    }
+
+    class VolunteerTimesheetPage {
+	    -records: object[]
+	    -selectedVolunteer: string
+	    +fetchRecords(volunteerId: string) : Promise~void~
+	    +handleSaveClick(id: number) : Promise~void~
+    }
+
+    class Toast {
+	    +$addToast(payload) : void
+	    +$ToastContainer() : JSX.Element
+    }
+
+	VolunteerService "1" --> "1" VolunteerRepository : association
+	ManageEventsService "1" --> "1" EventRepository : association
+	EventRequestService "1" --> "1" EventRequestRepository : association
+	AnnouncementService "1" --> "1" AnnouncementRepository : association
+	BadgeService "1" --> "1" BadgeRepository : association
+	Volunteer "1" --> "0..*" TimesheetRecord : has
+	Volunteer "1" --> "0..*" EventRequest : submits
+	Event "1" --> "0..*" EventRequest : receives
+	Volunteer "1" --> "0..*" VolunteerBadge : earns
+	Badge "1" --> "0..*" VolunteerBadge : awarded-as
+    VolunteerRepository ..> Volunteer : creates
+    VolunteerRepository ..> UserProfile : creates
+    VolunteerRepository ..> TimesheetRecord : creates
+    EventRepository ..> Event : creates
+    EventRepository ..> Event : updates
+    BadgeRepository ..> Badge : creates
+    BadgeRepository ..> VolunteerBadge : creates
+    AnnouncementRepository ..> Announcement : creates
+    EventRequestRepository ..> EventRequest : creates
+    VolunteerService ..> Volunteer : manages
+    VolunteerService ..> UserProfile : manages
+    VolunteerService ..> TimesheetRecord : manages
+    ManageEventsService ..> Event : manages
+    AnnouncementService ..> Announcement : manages
+    BadgeService ..> Badge : manages
+    BadgeService ..> VolunteerBadge : manages
+    EventRequestService ..> EventRequest : manages
+    AuthApiService ..> VolunteerService : interacts-over-http
+    VolunteerApiService ..> VolunteerService : interacts-over-http
+    EventApiService ..> ManageEventsService : interacts-over-http
+    EventApiService ..> EventRequestService : interacts-over-http
+    BadgeApiService ..> BadgeService : interacts-over-http
+    AnnouncementApiService ..> AnnouncementService : interacts-over-http
+	App "1" *-- "0..1" LoginPage : renders
+	App "1" *-- "0..1" HomePage : renders
+	App "1" *-- "0..1" EventsPage : renders
+	App "1" *-- "0..1" AnnouncementsPage : renders
+	App "1" *-- "0..1" BadgesPage : renders
+	App "1" *-- "0..1" ProfilePage : renders
+	App "1" *-- "0..1" VolunteerTimesheetPage : renders
+    App ..> AuthApiService : uses
+    App ..> Toast : uses
+    LoginPage ..> AuthApiService : uses
+    LoginPage ..> Toast : uses
+    ProfilePage ..> AuthApiService : uses
+    ProfilePage ..> Toast : uses
+    AnnouncementsPage ..> AnnouncementApiService : uses
+    AnnouncementsPage ..> Toast : uses
+    BadgesPage ..> BadgeApiService : uses
+    BadgesPage ..> VolunteerApiService : uses
+    BadgesPage ..> Toast : uses
+    EventsPage ..> EventApiService : uses
+    EventsPage ..> VolunteerApiService : uses
+    EventsPage ..> Toast : uses
+    VolunteerTimesheetPage ..> VolunteerApiService : uses
+    VolunteerTimesheetPage ..> Toast : uses

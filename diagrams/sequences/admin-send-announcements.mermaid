@@ -1,0 +1,34 @@
+sequenceDiagram
+autonumber
+actor Admin
+participant AnnouncementsPage
+participant AnnouncementApiService
+participant VolunteerService
+participant VolunteerRepo as VolunteerRepository
+participant AnnouncementService
+participant AnnouncementRepo as AnnouncementRepository
+participant Toast
+
+Admin->>+AnnouncementsPage: Open Announcements (Admin)
+AnnouncementsPage->>+AnnouncementApiService: getAnnouncements()
+AnnouncementApiService->>+AnnouncementService: getAnnouncements()
+AnnouncementService->>+AnnouncementRepo: getAnnouncements()
+AnnouncementRepo-->>-AnnouncementService: Announcement[]
+AnnouncementService-->>-AnnouncementApiService: Announcement[]
+AnnouncementApiService-->>-AnnouncementsPage: Announcement[]
+AnnouncementsPage-->>Admin: Display Announcement[]
+
+opt Post announcement
+  Admin->>+AnnouncementsPage: Choose post announcement
+  AnnouncementsPage->>+AnnouncementApiService: createAnnouncement(title, message)
+  AnnouncementApiService->>+VolunteerService: isAdmin(studentId)
+  VolunteerService->>+VolunteerRepo: isAdmin(studentId)
+  VolunteerRepo-->>-VolunteerService: authorized
+  VolunteerService-->>-AnnouncementApiService: authorized
+  AnnouncementApiService->>+AnnouncementService: createAnnouncement(title, message, postedBy)
+  AnnouncementService->>+AnnouncementRepo: createAnnouncement(...)
+  AnnouncementRepo-->>-AnnouncementService: Announcement
+  AnnouncementService-->>-AnnouncementApiService: Announcement
+  AnnouncementApiService-->>-AnnouncementsPage: Announcement
+  AnnouncementsPage-)Toast: addToast(success)
+end

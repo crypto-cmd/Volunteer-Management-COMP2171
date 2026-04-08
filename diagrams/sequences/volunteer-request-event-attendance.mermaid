@@ -1,0 +1,36 @@
+sequenceDiagram
+autonumber
+actor Volunteer
+participant EventsPage
+participant EventApiService
+participant EventRequestService
+participant EventRequestRepo as EventRequestRepository
+participant Toast
+
+Note over Volunteer,EventsPage: Request Event Attendance includes View Events first.
+
+Volunteer->>+EventsPage: Open Events (Volunteer)
+rect rgba(255, 249, 196, 0.75)
+EventsPage->>EventsPage: [Include] shared/view-events.mermaid
+end
+EventsPage-->>Volunteer: Display Event[]
+
+Volunteer->>+EventsPage: Choose request attendance(eventId)
+EventsPage->>+EventApiService: requestEventParticipation(eventId, volunteerId)
+EventApiService->>+EventRequestService: createEventRequest(volunteerId, eventId)
+EventRequestService->>+EventRequestRepo: createEventRequest(volunteerId, eventId)
+EventRequestRepo-->>EventRequestService: validation result
+
+rect rgba(220, 245, 230, 0.6)
+alt Valid request
+  EventRequestRepo-->>-EventRequestService: EventRequest
+  EventRequestService-->>-EventApiService: EventRequest
+  EventApiService-->>-EventsPage: EventRequest
+  EventsPage-)Toast: addToast(success)
+else Invalid/duplicate
+  EventRequestRepo-->>-EventRequestService: error
+  EventRequestService-->>-EventApiService: domain error
+  EventApiService-->>-EventsPage: error
+  EventsPage-)Toast: addToast(error)
+end
+end

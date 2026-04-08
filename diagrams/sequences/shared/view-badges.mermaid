@@ -1,0 +1,36 @@
+sequenceDiagram
+autonumber
+actor User as Admin/Volunteer
+participant BadgesPage
+participant BadgeApiService
+participant VolunteerApiService
+participant BadgeService
+participant BadgeRepo as BadgeRepository
+participant VolunteerService
+participant VolunteerRepo as VolunteerRepository
+
+User->>+BadgesPage: Open Badges
+rect rgba(224, 244, 255, 0.5)
+alt Admin-style badge catalog view
+  BadgesPage->>+BadgeApiService: getBadges()
+  BadgeApiService->>+BadgeService: getBadges()
+  BadgeService->>+BadgeRepo: getBadges()
+  BadgeRepo-->>-BadgeService: Badge[]
+  BadgeService-->>-BadgeApiService: Badge[]
+  BadgeApiService-->>-BadgesPage: Badge[]
+
+  BadgesPage->>+VolunteerApiService: searchVolunteers("")
+  VolunteerApiService->>+VolunteerService: searchVolunteers(query)
+  VolunteerService->>+VolunteerRepo: findAllVolunteers()
+  VolunteerRepo-->>-VolunteerService: Volunteer[]
+  VolunteerService-->>-VolunteerApiService: Volunteer[]
+  VolunteerApiService-->>-BadgesPage: Volunteer[]
+else Volunteer-style personal badges view
+  BadgesPage->>+BadgeApiService: getVolunteerBadges(volunteerId)
+  BadgeApiService->>+BadgeService: getVolunteerBadges(volunteerId)
+  BadgeService->>+BadgeRepo: getVolunteerBadges(volunteerId)
+  BadgeRepo-->>-BadgeService: VolunteerBadge[]
+  BadgeService-->>-BadgeApiService: VolunteerBadge[]
+  BadgeApiService-->>-BadgesPage: VolunteerBadge[]
+end
+end
