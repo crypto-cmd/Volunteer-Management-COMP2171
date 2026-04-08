@@ -6,6 +6,8 @@ import { ToastContainer } from "./components/Toast";
 import Events from "@pages/Events";
 import Login from "@pages/Login";
 import Profile from "@pages/Profile";
+import Announcements from "@pages/Announcements";
+import Badges from "@pages/Badges";
 import { AuthApiService, type UserProfile } from "@services/AuthApiService";
 
 const authApi = new AuthApiService();
@@ -100,6 +102,8 @@ export default function App() {
         {currentView === 'home' && <Home navigateTo={setCurrentView} />}
         {currentView === 'timesheet' && <VolunteerTimesheet navigateTo={setCurrentView} role={currentUser.role} />}
         {currentView === 'events' && <Events navigateTo={setCurrentView} role={currentUser.role} />}
+        {currentView === 'announcements' && <Announcements navigateTo={setCurrentView} role={currentUser.role} />}
+        {currentView === 'badges' && <Badges navigateTo={setCurrentView} role={currentUser.role} currentStudentId={currentUser.studentId} />}
         {currentView === 'profile' && (
           <Profile
             currentUser={currentUser}

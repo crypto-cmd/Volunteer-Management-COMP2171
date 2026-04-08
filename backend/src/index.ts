@@ -24,7 +24,7 @@ const eventService = new ManageEventsService(eventRepo);
 const corsHeaders = {
   "Access-Control-Allow-Origin": `*`,
   "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, x-student-id, x-user-role, Authorization",
 };
 
 const STUDENT_ID_REGEX = /^620\d{6}$/;
@@ -398,6 +398,98 @@ const server = Bun.serve({
           if (!updated) return json({ error: "Request not found" }, 404);
 
           return json(updated);
+        } catch (e: any) {
+          return json({ error: e.message }, 400);
+        }
+      },
+    },
+
+    "/api/announcements": {
+      async GET() {
+        return json(await volunteerService.getAnnouncements());
+      },
+      async POST(req) {
+        const denied = await requireAdmin(req);
+        if (denied) return denied;
+
+        const studentId = req.headers.get("x-student-id")?.trim() || "";
+        const body = await req.json() as { title?: string; message?: string };
+
+        if (!body.title || !body.message) {
+          return json({ error: "title and message are required" }, 400);
+        }
+
+        try {
+          const created = await volunteerService.createAnnouncement(
+            body.title.trim(),
+            body.message.trim(),
+            studentId,
+          );
+
+          return json(created, 201);
+        } catch (e: any) {
+          return json({ error: e.message }, 400);
+        }
+      },
+    },
+
+    "/api/badges": {
+      async GET() {
+        return json(await volunteerService.getBadges());
+      },
+      async POST(req) {
+        const denied = await requireAdmin(req);
+        if (denied) return denied;
+
+        const body = await req.json() as { name?: string; description?: string; icon?: string };
+
+        if (!body.name || !body.description) {
+          return json({ error: "name and description are required" }, 400);
+        }
+
+        try {
+          const created = await volunteerService.createBadge(
+            body.name.trim(),
+            body.description.trim(),
+            body.icon?.trim() || "🏅",
+          );
+          return json(created, 201);
+        } catch (e: any) {
+          return json({ error: e.message }, 400);
+        }
+      },
+    },
+
+    "/api/volunteers/:id/badges": {
+      async GET(req) {
+        const { id } = req.params;
+        if (!isValidStudentId(id)) {
+          return json({ error: "Volunteer ID must follow 620XXXXXX format" }, 400);
+        }
+
+        try {
+          return json(await volunteerService.getVolunteerBadges(id));
+        } catch (e: any) {
+          return json({ error: e.message }, 400);
+        }
+      },
+      async POST(req) {
+        const denied = await requireAdmin(req);
+        if (denied) return denied;
+
+        const { id } = req.params;
+        if (!isValidStudentId(id)) {
+          return json({ error: "Volunteer ID must follow 620XXXXXX format" }, 400);
+        }
+
+        const body = await req.json() as { badgeId?: number };
+        if (typeof body.badgeId !== "number") {
+          return json({ error: "badgeId is required" }, 400);
+        }
+
+        try {
+          const created = await volunteerService.assignBadge(id, body.badgeId);
+          return json(created, 201);
         } catch (e: any) {
           return json({ error: e.message }, 400);
         }

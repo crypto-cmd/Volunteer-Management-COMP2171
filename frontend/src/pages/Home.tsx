@@ -39,6 +39,16 @@ const moduleCards: ModuleCardConfig[] = [
     descriptionClassName: "text-gray-500",
   },
   {
+    key: "announcements",
+    title: "Announcements",
+    description: "Read the latest updates from coordinators and committee leads.",
+    icon: "📣",
+    onClickView: "announcements",
+    iconClassName: "bg-yellow-100 text-yellow-700",
+    titleClassName: "text-gray-800",
+    descriptionClassName: "text-gray-600",
+  },
+  {
     key: "profile",
     title: "My Profile",
     description: "Update your personal details and keep your account information current.",
@@ -51,14 +61,12 @@ const moduleCards: ModuleCardConfig[] = [
   {
     key: "awards",
     title: "Awards & Badges",
-    description: "View your achievements and milestones. (Coming Soon)",
+    description: "View achievements and milestone recognition earned through service.",
     icon: "🏆",
-    disabled: true,
-    onClickView: "",
-    cardClassName: "bg-gray-50 border-gray-200 opacity-60",
-    iconClassName: "bg-gray-200 text-gray-500",
+    onClickView: "badges",
+    iconClassName: "bg-amber-100 text-amber-700",
     titleClassName: "text-gray-800",
-    descriptionClassName: "text-gray-500",
+    descriptionClassName: "text-gray-600",
   },
 ];
 

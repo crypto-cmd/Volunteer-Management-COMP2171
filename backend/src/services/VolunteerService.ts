@@ -75,4 +75,28 @@ export class VolunteerService {
     async isAdmin(studentId: string): Promise<boolean> {
         return this.repo.isAdmin(studentId);
     }
+
+    async getAnnouncements() {
+        return this.repo.getAnnouncements();
+    }
+
+    async createAnnouncement(title: string, message: string, postedBy: string) {
+        return this.repo.createAnnouncement(title, message, postedBy);
+    }
+
+    async getBadges() {
+        return this.repo.getBadges();
+    }
+
+    async createBadge(name: string, description: string, icon: string) {
+        return this.repo.createBadge(name, description, icon);
+    }
+
+    async getVolunteerBadges(volunteerId: string) {
+        return this.repo.getVolunteerBadges(volunteerId);
+    }
+
+    async assignBadge(volunteerId: string, badgeId: number) {
+        return this.repo.assignBadge(volunteerId, badgeId);
+    }
 }
