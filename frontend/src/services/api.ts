@@ -1,5 +1,5 @@
-export const API_BASE = "http://localhost:3001";
-
+export const API_BASE = process.env.BUN_PUBLIC_API_BASE || "http://localhost:3001";
+console.log("API Base URL:", process.env.BUN_PUBLIC_API_BASE);
 export async function requestJson<T>(path: string, options: RequestInit = {}): Promise<T> {
     const response = await fetch(`${API_BASE}${path}`, options);
     const payload = await response.json().catch(() => ({}));

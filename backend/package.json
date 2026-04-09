@@ -10,7 +10,9 @@
     "typescript": "^5"
   },
   "scripts": {
-    "dev": "bun --hot src/index.ts"
+    "dev": "bun --hot src/index.ts",
+    "build:docker": "docker build --provenance=false --platform linux/amd64 -t bun-lambda-demo:latest .",
+    "start:lambda": "bun run src/index.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.100.0",

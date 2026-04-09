@@ -6,7 +6,10 @@
 
         "install:all": "bun install --cwd backend && bun install --cwd frontend",
         "install:backend": "bun install --cwd backend",
-        "install:frontend": "bun install --cwd frontend"
+        "install:frontend": "bun install --cwd frontend",
+
+        "build:frontend": "bun run --cwd frontend build",
+        "build:backend:docker": "bun run --cwd backend build:docker"
     },
     "devDependencies": {
         "concurrently": "^9.2.1"
