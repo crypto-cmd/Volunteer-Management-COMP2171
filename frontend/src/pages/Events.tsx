@@ -3,7 +3,6 @@ import DataTable, { type DataTableColumn, type DataTableRow } from "@components/
 import Modal from "@components/Modal";
 import PageTopBar from "@components/PageTopBar";
 import { addToast } from "@components/Toast";
-import VolunteerDropdownCard from "@components/VolunteerDropdownCard";
 import {
     EventApiService,
     type EventPayload,
@@ -18,6 +17,7 @@ const volunteerApi = new VolunteerApiService();
 
 type EventsProps = {
     navigateTo?: (view: string) => void;
+    currentStudentId?: string;
 };
 
 function toForm(event?: EventRecord): EventRecord {
@@ -36,7 +36,7 @@ function toForm(event?: EventRecord): EventRecord {
     };
 }
 
-export default function Events({ navigateTo, role = "Volunteer" }: EventsProps & { role?: "Volunteer" | "Admin" }) {
+export default function Events({ navigateTo, role = "Volunteer", currentStudentId }: EventsProps & { role?: "Volunteer" | "Admin" }) {
     const [events, setEvents] = useState<EventRecord[]>([]);
     const [requests, setRequests] = useState<EventRequestRecord[]>([]);
     const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
@@ -68,7 +68,10 @@ export default function Events({ navigateTo, role = "Volunteer" }: EventsProps &
         Promise.all([fetchEvents(), fetchRequests(), volunteerApi.searchVolunteers("")])
             .then(([, , foundVolunteers]) => {
                 setVolunteers(foundVolunteers);
-                if (foundVolunteers.length > 0 && !foundVolunteers.some((v) => v.id === selectedVolunteerId)) {
+                // For volunteers, lock to their own ID; for admins, use first volunteer
+                if (role === "Volunteer" && currentStudentId) {
+                    setSelectedVolunteerId(currentStudentId);
+                } else if (foundVolunteers.length > 0 && !foundVolunteers.some((v) => v.id === selectedVolunteerId)) {
                     setSelectedVolunteerId(foundVolunteers[0]!.id);
                 }
             })
@@ -444,16 +447,7 @@ export default function Events({ navigateTo, role = "Volunteer" }: EventsProps &
                     </p>
                 </div>
 
-                {role === "Volunteer" && (
-                    <div className="min-w-72">
-                        <VolunteerDropdownCard
-                            label="Volunteer"
-                            volunteers={volunteers}
-                            selectedVolunteerId={selectedVolunteerId}
-                            onSelectVolunteer={setSelectedVolunteerId}
-                        />
-                    </div>
-                )}
+
 
                 {role === "Admin" && (
                     <button

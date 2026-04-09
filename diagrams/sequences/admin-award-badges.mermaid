@@ -7,7 +7,7 @@ participant Toast
 
 Admin->>+BadgesPage: Open Badges (Admin)
 rect rgba(255, 249, 196, 0.75)
-BadgesPage->>BadgesPage: [Include] shared/view-badges.mermaid
+BadgesPage->>BadgesPage: View Badges
 end
 BadgesPage-->>Admin: Display Badge[]
 
@@ -16,11 +16,13 @@ alt Create badge
   Admin->>+BadgesPage: Choose create badge
   BadgesPage->>+BadgeApiService: createBadge(name, description, icon)
   BadgeApiService-->>-BadgesPage: Badge
-  BadgesPage-)Toast: addToast(success)
+  BadgesPage->>+Toast: addToast(success)
+  Toast-->>-Admin: Show notification
 else Assign badge
   Admin->>+BadgesPage: Choose assign badge
   BadgesPage->>+BadgeApiService: assignBadge(volunteerId, badgeId)
-  BadgeApiService-->>-BadgesPage: VolunteerBadge
-  BadgesPage-)Toast: addToast(success)
+  BadgeApiService-->>-BadgesPage: success
+  BadgesPage->>+Toast: addToast(success)
+  Toast-->>-Admin: Show notification
 end
 end

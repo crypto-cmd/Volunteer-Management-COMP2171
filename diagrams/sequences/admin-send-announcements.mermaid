@@ -30,5 +30,6 @@ opt Post announcement
   AnnouncementRepo-->>-AnnouncementService: Announcement
   AnnouncementService-->>-AnnouncementApiService: Announcement
   AnnouncementApiService-->>-AnnouncementsPage: Announcement
-  AnnouncementsPage-)Toast: addToast(success)
+  AnnouncementsPage->>+Toast: addToast(success)
+  Toast-->>-Admin: Show notification
 end

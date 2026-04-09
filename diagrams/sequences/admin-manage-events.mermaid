@@ -5,11 +5,9 @@ participant EventsPage
 participant EventApiService
 participant Toast
 
-Note over Admin,EventsPage: Manage Events includes View Events.
-
 Admin->>+EventsPage: Open Events (Admin)
 rect rgba(255, 249, 196, 0.75)
-EventsPage->>EventsPage: [Include] shared/view-events.mermaid
+EventsPage->>EventsPage: View Events
 end
 EventsPage-->>Admin: Display Event[]
 
@@ -18,16 +16,19 @@ alt Create event
   Admin->>+EventsPage: Choose create event
   EventsPage->>+EventApiService: createEvent(payload)
   EventApiService-->>-EventsPage: Event
-  EventsPage-)Toast: addToast(success)
+  EventsPage->>+Toast: addToast(success)
+  Toast-->>-Admin: Show notification
 else Update event
   Admin->>+EventsPage: Choose update event
   EventsPage->>+EventApiService: updateEvent(id, payload)
   EventApiService-->>-EventsPage: updated event
-  EventsPage-)Toast: addToast(success)
+  EventsPage->>+Toast: addToast(success)
+  Toast-->>-Admin: Show notification
 else Delete event
   Admin->>+EventsPage: Choose delete event
   EventsPage->>+EventApiService: deleteEvent(id)
   EventApiService-->>-EventsPage: success
-  EventsPage-)Toast: addToast(success)
+  EventsPage->>+Toast: addToast(success)
+  Toast-->>-Admin: Show notification
 end
 end

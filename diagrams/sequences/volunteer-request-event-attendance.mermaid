@@ -7,11 +7,9 @@ participant EventRequestService
 participant EventRequestRepo as EventRequestRepository
 participant Toast
 
-Note over Volunteer,EventsPage: Request Event Attendance includes View Events first.
-
 Volunteer->>+EventsPage: Open Events (Volunteer)
 rect rgba(255, 249, 196, 0.75)
-EventsPage->>EventsPage: [Include] shared/view-events.mermaid
+EventsPage->>EventsPage: View Events
 end
 EventsPage-->>Volunteer: Display Event[]
 
@@ -26,11 +24,13 @@ alt Valid request
   EventRequestRepo-->>-EventRequestService: EventRequest
   EventRequestService-->>-EventApiService: EventRequest
   EventApiService-->>-EventsPage: EventRequest
-  EventsPage-)Toast: addToast(success)
+  EventsPage->>+Toast: addToast(success)
+  Toast-->>-Volunteer: Show notification
 else Invalid/duplicate
   EventRequestRepo-->>-EventRequestService: error
   EventRequestService-->>-EventApiService: domain error
   EventApiService-->>-EventsPage: error
-  EventsPage-)Toast: addToast(error)
+  EventsPage->>+Toast: addToast(error)
+  Toast-->>-Volunteer: Show notification
 end
 end

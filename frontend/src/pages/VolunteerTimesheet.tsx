@@ -3,11 +3,10 @@ import DataTable, { type DataTableColumn, type DataTableRow } from '@components/
 import PageTopBar from '@components/PageTopBar';
 import { VolunteerApiService, type Volunteer, type TimesheetRecord } from '@services/VolunteerApiService';
 import { addToast } from '@components/Toast';
-import VolunteerDropdownCard from '@components/VolunteerDropdownCard';
 
 const apiService = new VolunteerApiService();
 
-export default function VolunteerTimesheet({ navigateTo, role = 'Volunteer' }: { navigateTo?: (view: string) => void; role?: 'Volunteer' | 'Admin' }) {
+export default function VolunteerTimesheet({ navigateTo, role = 'Volunteer', currentStudentId }: { navigateTo?: (view: string) => void; role?: 'Volunteer' | 'Admin'; currentStudentId?: string }) {
     const [selectedVolunteer, setSelectedVolunteer] = useState('');
     const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
     const [volunteerSearch, setVolunteerSearch] = useState('');
@@ -50,7 +49,10 @@ export default function VolunteerTimesheet({ navigateTo, role = 'Volunteer' }: {
         apiService.searchVolunteers('')
             .then((all) => {
                 setVolunteers(all);
-                if (all.length > 0 && !all.some(v => v.id === selectedVolunteer)) {
+                // For volunteers, lock to their own ID; for admins, use first volunteer
+                if (role === 'Volunteer' && currentStudentId) {
+                    setSelectedVolunteer(currentStudentId);
+                } else if (all.length > 0 && !all.some(v => v.id === selectedVolunteer)) {
                     setSelectedVolunteer(all[0]!.id);
                 }
             })
@@ -196,19 +198,6 @@ export default function VolunteerTimesheet({ navigateTo, role = 'Volunteer' }: {
                 <p className="text-gray-600">Track and manage community service hours.</p>
             </div>
 
-            {role === 'Volunteer' && (
-                <VolunteerDropdownCard
-                    label="View As Volunteer"
-                    volunteers={volunteers}
-                    selectedVolunteerId={selectedVolunteer}
-                    onSelectVolunteer={(id) => {
-                        setSelectedVolunteer(id);
-                        setEditingId(null);
-                    }}
-                    viewingName={volunteerName}
-                />
-            )}
-
             {/* Admin: Volunteer Search */}
             {role === 'Admin' && (
                 <div className="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -220,26 +209,30 @@ export default function VolunteerTimesheet({ navigateTo, role = 'Volunteer' }: {
                         value={volunteerSearch}
                         onChange={(e) => setVolunteerSearch(e.target.value)}
                     />
-                    <div className="flex flex-wrap gap-2">
-                        {searchResults.map(v => (
+                    <div className="flex flex-wrap gap-2 max-h-20 overflow-hidden">
+                        {/* Show selected volunteer first */}
+                        {selectedVolunteer && volunteers.find(v => v.id === selectedVolunteer) && (
+                            <button
+                                onClick={() => { setEditingId(null); }}
+                                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-600 text-white transition-colors"
+                            >
+                                {volunteers.find(v => v.id === selectedVolunteer)?.name} <span className="opacity-80">({selectedVolunteer})</span>
+                            </button>
+                        )}
+                        {/* Show search results (excluding selected) */}
+                        {searchResults.filter(v => v.id !== selectedVolunteer).map(v => (
                             <button
                                 key={v.id}
                                 onClick={() => { setSelectedVolunteer(v.id); setEditingId(null); }}
-                                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${selectedVolunteer === v.id
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
-                                    }`}
+                                className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
                             >
                                 {v.name} <span className="opacity-60">({v.id})</span>
                             </button>
                         ))}
-                        {searchResults.length === 0 && (
+                        {searchResults.length === 0 && !volunteerSearch && (
                             <p className="text-sm text-gray-500">No volunteers found.</p>
                         )}
                     </div>
-                    <p className="mt-2 text-sm text-blue-700">
-                        Viewing: <strong>{volunteerName}</strong>
-                    </p>
                 </div>
             )}
 

@@ -23,4 +23,5 @@ VolunteerService->>+VolunteerRepo: updateVolunteerProfile(studentId, updates)
 VolunteerRepo-->>-VolunteerService: UserProfile
 VolunteerService-->>-AuthApiService: UserProfile
 AuthApiService-->>-ProfilePage: updated UserProfile
-ProfilePage-)Toast: addToast(success)
+ProfilePage->>+Toast: addToast(success)
+Toast-->>-User: Show notification

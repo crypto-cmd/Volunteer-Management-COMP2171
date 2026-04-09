@@ -5,11 +5,9 @@ participant TimesheetPage as VolunteerTimesheetPage
 participant VolunteerApiService
 participant Toast
 
-Note over Admin,TimesheetPage: Manage Timesheets includes View Timesheet.
-
 Admin->>+TimesheetPage: Open Timesheet (Admin)
 rect rgba(255, 249, 196, 0.75)
-TimesheetPage->>TimesheetPage: [Include] shared/view-timesheet.mermaid
+TimesheetPage->>TimesheetPage: View Timesheet
 end
 TimesheetPage-->>Admin: Display timesheet payload
 
@@ -17,5 +15,6 @@ opt Update hours
   Admin->>+TimesheetPage: Choose update hours
   TimesheetPage->>+VolunteerApiService: updateRecord(volunteerId, recordId, hours)
   VolunteerApiService-->>-TimesheetPage: updated record
-  TimesheetPage-)Toast: addToast(success)
+  TimesheetPage->>+Toast: addToast(success)
+  Toast-->>-Admin: Show notification
 end

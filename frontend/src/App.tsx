@@ -100,8 +100,8 @@ export default function App() {
       {/* Main Content Area */}
       <main className="py-6">
         {currentView === 'home' && <Home navigateTo={setCurrentView} />}
-        {currentView === 'timesheet' && <VolunteerTimesheet navigateTo={setCurrentView} role={currentUser.role} />}
-        {currentView === 'events' && <Events navigateTo={setCurrentView} role={currentUser.role} />}
+        {currentView === 'timesheet' && <VolunteerTimesheet navigateTo={setCurrentView} role={currentUser.role} currentStudentId={currentUser.studentId} />}
+        {currentView === 'events' && <Events navigateTo={setCurrentView} role={currentUser.role} currentStudentId={currentUser.studentId} />}
         {currentView === 'announcements' && <Announcements navigateTo={setCurrentView} role={currentUser.role} />}
         {currentView === 'badges' && <Badges navigateTo={setCurrentView} role={currentUser.role} currentStudentId={currentUser.studentId} />}
         {currentView === 'profile' && (
