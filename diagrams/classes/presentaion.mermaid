@@ -1,0 +1,97 @@
+---
+config:
+  layout: elk
+  class:
+    hideEmptyMembersBox: true
+  look: neo
+---
+classDiagram
+direction TB
+
+    class App {
+        -currentView: string
+        -currentUser: object
+        +handleLoginSuccess(user) : void
+        +handleProfileUpdated(profile) : void
+        +handleLogout() : void
+    }
+
+    class LoginPage {
+        -mode: string
+        -studentId: string
+        -isLoading: boolean
+        +handleSubmit(e) : Promise~void~
+    }
+
+    class HomePage {
+        +navigateTo(view: string) : void
+    }
+
+    class EventsPage {
+        -events: object[]
+        -requests: object[]
+        +handleCreateNew() : void
+        +handleEdit(event) : void
+        +handleSave(e) : Promise~void~
+    }
+
+    class AnnouncementsPage {
+        -items: object[]
+        +handleCreate(e) : Promise~void~
+    }
+
+    class BadgesPage {
+        -badges: object[]
+        -myBadges: object[]
+        +handleCreateBadge(e) : Promise~void~
+        +handleAssignBadge(e) : Promise~void~
+    }
+
+    class ProfilePage {
+        -formData: object
+        +handleInputChange(e) : void
+        +handleSave(e) : Promise~void~
+    }
+
+    class VolunteerTimesheetPage {
+        -records: object[]
+        -selectedVolunteer: string
+        +fetchRecords(volunteerId: string) : Promise~void~
+        +handleSaveClick(id: number) : Promise~void~
+    }
+
+    class Toast {
+        +$addToast(payload) : void
+        +$ToastContainer() : JSX.Element
+    }
+
+    App "1" *-- "0..1" LoginPage : renders
+    App "1" *-- "0..1" HomePage : renders
+    App "1" *-- "0..1" EventsPage : renders
+    App "1" *-- "0..1" AnnouncementsPage : renders
+    App "1" *-- "0..1" BadgesPage : renders
+    App "1" *-- "0..1" ProfilePage : renders
+    App "1" *-- "0..1" VolunteerTimesheetPage : renders
+
+    App ..> AuthApiService : uses
+    App ..> Toast : uses
+    
+    LoginPage ..> AuthApiService : uses
+    LoginPage ..> Toast : uses
+    
+    ProfilePage ..> AuthApiService : uses
+    ProfilePage ..> Toast : uses
+    
+    AnnouncementsPage ..> AnnouncementApiService : uses
+    AnnouncementsPage ..> Toast : uses
+    
+    BadgesPage ..> BadgeApiService : uses
+    BadgesPage ..> VolunteerApiService : uses
+    BadgesPage ..> Toast : uses
+    
+    EventsPage ..> EventApiService : uses
+    EventsPage ..> VolunteerApiService : uses
+    EventsPage ..> Toast : uses
+    
+    VolunteerTimesheetPage ..> VolunteerApiService : uses
+    VolunteerTimesheetPage ..> Toast : uses

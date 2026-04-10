@@ -21,15 +21,15 @@ EventRequestRepo-->>EventRequestService: validation result
 
 rect rgba(220, 245, 230, 0.6)
 alt Valid request
-  EventRequestRepo-->>-EventRequestService: EventRequest
-  EventRequestService-->>-EventApiService: EventRequest
-  EventApiService-->>-EventsPage: EventRequest
+  EventRequestRepo-->>EventRequestService: EventRequest
+  EventRequestService-->>EventApiService: EventRequest
+  EventApiService-->>EventsPage: EventRequest
   EventsPage->>+Toast: addToast(success)
   Toast-->>-Volunteer: Show notification
 else Invalid/duplicate
-  EventRequestRepo-->>-EventRequestService: error
-  EventRequestService-->>-EventApiService: domain error
-  EventApiService-->>-EventsPage: error
+  EventRequestRepo-->>EventRequestService: error
+  EventRequestService-->>EventApiService: domain error
+  EventApiService-->>EventsPage: error
   EventsPage->>+Toast: addToast(error)
   Toast-->>-Volunteer: Show notification
 end

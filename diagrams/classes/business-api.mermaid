@@ -1,0 +1,110 @@
+---
+config:
+  layout: elk
+  class:
+    hideEmptyMembersBox: true
+  look: neo
+---
+classDiagram
+direction TB
+
+    class VolunteerService {
+        -volunteerRepo: VolunteerRepository
+        +searchVolunteers(query: string) Volunteer[]
+        +getVolunteerRecords(volunteerId: string) object | null
+        +updateRecord(volunteerId: string, recordId: number, hoursWorked: number) TimesheetRecord | null
+        +login(studentId: string, password: string) UserProfile | null
+        +getUserProfile(studentId: string) UserProfile | null
+        +updateUserProfile(studentId: string, updates) UserProfile | null
+        +registerVolunteer(payload) UserProfile
+        +isAdmin(studentId: string) boolean
+    }
+
+    class ManageEventsService {
+        -eventRepository: EventRepository
+        +create(data:EventData) Event
+        +update(event: Event) void
+        +delete(eventId: string)  void
+        +get(eventId: string)  Event | null
+        +getAllEvents() Event[]
+    }
+
+    class EventRequestService {
+        -eventRequestRepo: EventRequestRepository
+        +get(filters) EventRequest[]
+        +create(volunteerId: string, eventId: string) EventRequest
+        +update(requestId: number, status: string) EventRequest | null
+    }
+
+    class AnnouncementService {
+        -announcementRepo: AnnouncementRepository
+        +get() Announcement[]
+        +create(title: string, message: string, postedBy: string) Announcement
+    }
+
+    class BadgeService {
+        -badgeRepo: BadgeRepository
+        +get() Badge[]
+        +create(name: string, description: string, icon: string) Badge
+        +get(volunteerId: string) VolunteerBadge[]
+        +assign(volunteerId: string, badgeId: number) VolunteerBadge
+    }
+
+    class AuthApiService {
+        +login(studentId: string, password: string) object
+        +register(payload) object
+        +getProfile(studentId: string) object
+        +updateProfile(studentId: string, payload) object
+    }
+
+    class VolunteerApiService {
+        -baseUrl: string
+        +searchVolunteers(query: string, signal: AbortSignal) object[]
+        +getVolunteerRecords(volunteerId: string) object
+        +updateRecord(volunteerId: string, recordId: number, hoursWorked: number) object
+    }
+
+    class EventApiService {
+        -baseUrl: string
+        +get() object[]
+        +create(payload) object
+        +update(eventId: string, payload) object
+        +delete(eventId: string) void
+        +requestEventParticipation(eventId: string, volunteerId: string) object
+        +getEventRequests(filters) object[]
+        +updateEventRequestStatus(requestId: number, status: string) object
+    }
+
+    class BadgeApiService {
+        +get() object[]
+        +create(name: string, description: string, icon: string) object
+        +get(volunteerId: string) object[]
+        +assign(volunteerId: string, badgeId: number) object
+    }
+
+    class AnnouncementApiService {
+        +get() object[]
+        +create(title: string, message: string) object
+    }
+
+    AuthApiService ..> VolunteerService : interacts-over-http
+    VolunteerApiService ..> VolunteerService : interacts-over-http
+    EventApiService ..> ManageEventsService : interacts-over-http
+    EventApiService ..> EventRequestService : interacts-over-http
+    BadgeApiService ..> BadgeService : interacts-over-http
+    AnnouncementApiService ..> AnnouncementService : interacts-over-http
+
+    VolunteerService ..> Volunteer : manages
+    VolunteerService ..> UserProfile : manages
+    VolunteerService ..> TimesheetRecord : manages
+    ManageEventsService ..> Event : manages
+    AnnouncementService ..> Announcement : manages
+    BadgeService ..> Badge : manages
+    BadgeService ..> VolunteerBadge : manages
+    EventRequestService ..> EventRequest : manages
+    
+    VolunteerService "1" --> "1" VolunteerRepository : association
+    ManageEventsService "1" --> "1" EventRepository : association
+    EventRequestService "1" --> "1" EventRequestRepository : association
+    AnnouncementService "1" --> "1" AnnouncementRepository : association
+    BadgeService "1" --> "1" BadgeRepository : association

@@ -1,0 +1,150 @@
+---
+config:
+  layout: elk
+  class:
+    hideEmptyMembersBox: true
+  look: neo
+---
+classDiagram
+direction TB
+
+    class Announcement {
+        +id: number
+        +title: string
+        +message: string
+        +postedAt: string
+        +postedBy: string
+        +toJSON() object
+    }
+
+    class Badge {
+        +id: number
+        +name: string
+        +description: string
+        +icon: string
+        +createdAt: string
+        +toJSON() object
+    }
+
+    class Event {
+        +id: string
+        +name: string
+        +description: string
+        +date: string
+        +time: string
+        +location: string
+        +capacity: number
+        +category: string
+        +status: string
+        +toJSON() object
+    }
+
+    class EventRequest {
+        +id: number
+        +eventId: string
+        +volunteerId: string
+        +status: string
+        +requestedAt: string
+        +eventName: string
+        +volunteerName: string
+        +setStatus(status: string) void
+        +toJSON() object
+    }
+
+    class TimesheetRecord {
+        +id: number
+        +date: string
+        +eventId: string
+        +eventName: string
+        +hoursWorked: number
+        +updateHours(hours: number) void
+        +toJSON() object
+    }
+
+    class UserProfile {
+        +studentId: string
+        +name: string
+        +role: "Admin" | "Volunteer"
+        +email: string
+        +phone: string
+        +major: string
+        +yearOfStudy: string
+        +toJSON() object
+    }
+
+    class Volunteer {
+        +id: string
+        +name: string
+        +matchesFuzzy(query: string) boolean
+        +toJSON() object
+    }
+
+    class VolunteerBadge {
+        +id: number
+        +volunteerId: string
+        +badgeId: number
+        +awardedAt: string
+        +badgeName: string
+        +badgeDescription: string
+        +badgeIcon: string
+        +toJSON() object
+    }
+
+    class VolunteerRepository {
+        -supabase: SupabaseClient
+        +findAllVolunteers() Volunteer[]
+        +findVolunteerById(id: string) Volunteer | null
+        +findByStudentIdAndPassword(studentId: string, password: string) UserProfile | null
+        +getVolunteerProfile(studentId: string) UserProfile | null
+        +updateVolunteerProfile(studentId: string, updates: ProfileUpdates) UserProfile | null
+        +createVolunteerAccount(payload: RegisterPayload) UserProfile
+        +isAdmin(studentId: string) boolean
+        +getRecordsForVolunteer(volunteerId: string) TimesheetRecord[]
+        +updateRecord(volunteerId: string, recordId: number, hoursWorked: number) TimesheetRecord | null
+    }
+
+    class EventRepository {
+        -supabase: SupabaseClient
+        +findAll() Event[]
+        +findById(eventId: string) Event | null
+        +create(data: EventData) Event
+        +update(event: Event) void
+        +delete(eventId: string) void
+    }
+
+    class BadgeRepository {
+        -supabase: SupabaseClient
+        +getBadges() Badge[]
+        +createBadge(name: string, description: string, icon: string) Badge
+        +getVolunteerBadges(volunteerId: string) VolunteerBadge[]
+        +assignBadge(volunteerId: string, badgeId: number) VolunteerBadge
+    }
+
+    class EventRequestRepository {
+        -supabase: SupabaseClient
+        +getEventRequests(filters) EventRequest[]
+        +createEventRequest(volunteerId: string, eventId: string) EventRequest
+        +updateEventRequestStatus(requestId: number, status: string) EventRequest | null
+    }
+
+    class AnnouncementRepository {
+        -supabase: SupabaseClient
+        +getAnnouncements() Announcement[]
+        +createAnnouncement(title: string, message: string, postedBy: string) Announcement
+    }
+
+    Volunteer "1" --> "0..*" TimesheetRecord : has
+    Volunteer "1" --> "0..*" EventRequest : submits
+    Event "1" --> "0..*" EventRequest : receives
+    Volunteer "1" --> "0..*" VolunteerBadge : earns
+    Badge "1" --> "0..*" VolunteerBadge : awarded-as
+
+    VolunteerRepository ..> Volunteer : creates
+    VolunteerRepository ..> UserProfile : creates
+    VolunteerRepository ..> TimesheetRecord : creates
+    EventRepository ..> Event : creates
+    EventRepository ..> Event : updates
+    BadgeRepository ..> Badge : creates
+    BadgeRepository ..> VolunteerBadge : creates
+    EventRequestRepository ..> EventRequest : creates
+    AnnouncementRepository ..> Announcement : creates
